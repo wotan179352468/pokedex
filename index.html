@@ -128,9 +128,11 @@ const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'El
 const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
 const TC={Normal:'#A8A878',Feu:'#F08030',Eau:'#6890F0',Plante:'#78C850','Électrik':'#E0B800',Glace:'#6CC8C8',Combat:'#C03028',Poison:'#A040A0',Sol:'#C8A040',Vol:'#8F78E8',Psy:'#F85888',Insecte:'#A8B820',Roche:'#B8A038',Spectre:'#705898',Dragon:'#7038F8',Acier:'#9898B8','Ténèbres':'#705848','Fée':'#E080A0'};
 const DFI=+((location.hash.match(/defi=(\d+)/)||[])[1]||0);
-const cibleDe=s=>!s?null:s[0]=='t'?{k:'t',v:s.slice(2)}:{k:'g',v:+s.slice(2)};
-const labelCible=c=>c.k=='t'?`type ${tname(c.v)}`:`${tr('génération','generation')} ${c.v} (${gname(c.v)})`;
-const cibleIds=g=>Object.keys(P).map(Number).filter(n=>!g.cible||(g.cible.k=='t'?(P[n].t||[]).includes(g.cible.v):gen(n)==g.cible.v));
+const nc=c=>c&&c.k?(c.k=='t'?{t:c.v}:{g:c.v}):c||{}; // ancien format {k,v} -> {t,g}
+const cibleDe=s=>{const o={};String(s||'').split('|').forEach(p=>{if(p.startsWith('t:'))o.t=p.slice(2);else if(p.startsWith('g:'))o.g=+p.slice(2)});return o.t||o.g?o:null};
+const cibleStr=c=>[c.t?'t:'+c.t:'',c.g?'g:'+c.g:''].filter(Boolean).join('|');
+const labelCible=c=>{c=nc(c);return[c.t?`type ${tname(c.t)}`:'',c.g?`${tr('génération','generation')} ${c.g} (${gname(c.g)})`:''].filter(Boolean).join(' · ')};
+const cibleIds=g=>{const c=nc(g.cible);return Object.keys(P).map(Number).filter(n=>(!c.t||(P[n].t||[]).includes(c.t))&&(!c.g||gen(n)==c.g))};
 let P={},EX={},LO={},TT={},GT={},tm;
 
 /* ── Sons et effets ── */
@@ -213,15 +215,20 @@ function closeModal(){const m=$('#mdl');if(m)m.remove()}
 function modal(html,after){closeModal();const m=document.createElement('div');m.id='mdl';m.innerHTML=`<div class=box>${html}<button id=mx class=back style="margin-top:14px">${tr('Fermer','Close')}</button></div>`;document.body.append(m);
   m.onclick=e=>{if(e.target==m||e.target.id=='mx')closeModal()};if(after)after()}
 function defis(){
-  const cur=S.opts.cible||'',m=S.opts.min;
+  const c=cibleDe(S.opts.cible)||{},m=S.opts.min,sc=($('#mdl .box')||{}).scrollTop||0,n=pret?cibleIds({cible:c}).length:null;
   modal(`<h2>🎯 ${tr('Défis','Challenges')}</h2>
   <h4>${tr('Durée','Duration')}</h4><div class=chips>${[15,30,60,0].map(x=>`<button class="chip ${m==x?'act':''}" data-m=${x}>${x?'🕒 '+x+' min':tr('♾️ Libre','♾️ Free')}</button>`).join('')}</div>
-  <h4>${tr('Cible','Target')}</h4><div class=chips><button class="chip ${!cur?'act':''}" data-c="">${tr('Tous les Pokémon','All Pokémon')}</button></div>
-  <h4>${tr('Par type','By type')}</h4><div class=chips>${TYPES.map(x=>`<button class="chip ${cur=='t:'+x?'act':''}" data-c="t:${x}" style="background:${TC[x]}">${tname(x)}</button>`).join('')}</div>
-  <h4>${tr('Par génération','By generation')}</h4><div class=chips>${GENS.map(g=>`<button class="chip ${cur=='g:'+g[0]?'act':''}" data-c="g:${g[0]}">${tr('Gén.','Gen.')} ${g[0]} · ${gname(g[0])}</button>`).join('')}</div>`,
-  ()=>{document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{S.opts.min=+b.dataset.m;so();maj()});
-    document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{S.opts.cible=b.dataset.c;so();maj()});
-    const maj=()=>{const d=$('#df');if(d)d.textContent=defLabel();defis()}})
+  <h4>${tr('Type','Type')}</h4><div class=chips>${TYPES.map(x=>`<button class="chip ${c.t==x?'act':''}" data-t="${x}" style="background:${TC[x]}">${tname(x)}</button>`).join('')}</div>
+  <h4>${tr('Génération','Generation')}</h4><div class=chips>${GENS.map(g=>`<button class="chip ${c.g==g[0]?'act':''}" data-g=${g[0]}>${tr('Gén.','Gen.')} ${g[0]} · ${gname(g[0])}</button>`).join('')}</div>
+  <p class=gold style="${n===0?'color:#e74c3c':''}">${n===null?'':n===0?tr('Aucun Pokémon ne correspond : change de type ou de génération','No Pokémon match: change the type or generation'):`🎯 ${n} Pokémon ${tr('dans ce défi','in this challenge')}`}</p>
+  <p class=small style="margin:2px 0">${tr('Tu peux combiner un type ET une génération. Clique à nouveau pour retirer un choix.','You can combine a type AND a generation. Click again to remove a choice.')}</p>
+  <div class=chips><button class=chip data-r=1>↺ ${tr('Tous les Pokémon','All Pokémon')}</button></div>`,
+  ()=>{const maj=f=>{f();so();const d=$('#df');if(d)d.textContent=defLabel();defis()},cur=()=>cibleDe(S.opts.cible)||{};
+    document.querySelectorAll('#mdl [data-m]').forEach(b=>b.onclick=()=>maj(()=>{S.opts.min=+b.dataset.m}));
+    document.querySelectorAll('#mdl [data-t]').forEach(b=>b.onclick=()=>maj(()=>{const x=cur();x.t=x.t==b.dataset.t?null:b.dataset.t;S.opts.cible=cibleStr(x)}));
+    document.querySelectorAll('#mdl [data-g]').forEach(b=>b.onclick=()=>maj(()=>{const x=cur();x.g=x.g==+b.dataset.g?null:+b.dataset.g;S.opts.cible=cibleStr(x)}));
+    $('#mdl [data-r]').onclick=()=>maj(()=>{S.opts.cible=''});
+    $('#mdl .box').scrollTop=sc})
 }
 function reglages(){
   const en=S.opts.lang=='en';
@@ -253,7 +260,7 @@ function menu(){
   <p class=small><button id=ex>⬇ ${tr('Exporter ma sauvegarde','Export my save')}</button><button id=im>⬆ ${tr('Importer','Import')}</button><button id=rz>🗑 ${tr('Tout effacer','Erase everything')}</button></p><input type=file id=fi accept=.json hidden>
   <p class=small>${tr('Ta progression est sauvegardée dans ce navigateur. Données : TyraDex · Projet de fan non officiel, Pokémon © Nintendo / Game Freak.','Your progress is saved in this browser. Data: TyraDex · Unofficial fan project, Pokémon © Nintendo / Game Freak.')}</p></div>`);
   $('#rg').onclick=reglages;$('#df').onclick=defis;majLd();
-  $('#st').onclick=()=>{finirPartie(false);jeu()};
+  $('#st').onclick=()=>{const c=cibleDe(S.opts.cible);if(c&&!cibleIds({cible:c}).length){defis();return}finirPartie(false);jeu()};
   $('#su').onclick=()=>succes();$('#sa').onclick=()=>stats();
   $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
   $('#im').onclick=()=>$('#fi').click();
