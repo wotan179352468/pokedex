@@ -96,6 +96,12 @@ h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-alig
 .toast{background-image:linear-gradient(110deg,transparent 30%,rgba(255,215,0,.28) 50%,transparent 70%);background-size:200% 100%;display:flex;gap:12px;align-items:center;width:min(350px,92vw);background:var(--st);border:2px solid var(--gold);border-radius:8px;padding:10px 14px;animation:in .3s,shine 1.3s .3s;transition:opacity .4s}.toast.out{opacity:0}
 .toast .ic{font:800 1.6rem Arial;color:var(--gold);min-width:46px;text-align:center}.toast h4{color:var(--gold)}.toast p{font-size:.8rem}
 @keyframes in{from{transform:translateX(40px);opacity:0}}
+/* shiny */
+@keyframes glow{50%{filter:drop-shadow(0 0 28px #ffd700) brightness(1.35)}}
+.glow{animation:glow 1.2s}.sil{filter:brightness(0) opacity(.3)}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none}
+.cell{height:64px;padding:2px;background:var(--st);border:1px solid var(--card);border-radius:8px;color:var(--lock);font-size:.68rem;display:grid;place-items:center}
+.cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{outline:2px solid var(--blue)}.cell img{max-width:100%;max-height:58px}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
 body.light button{color:#2c3e50}
@@ -113,9 +119,10 @@ body.light .toast{box-shadow:0 4px 14px #0003}
 <div id="app"></div><div id="toasts"></div>
 <script>
 const TOTAL=1025,DUREE=3600,dur=g=>g.duree||DUREE,API='https://tyradex.app/api/v1';
-const SPR=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/${S.opts.shiny?'shiny':'regular'}.png`;
+const SHINY_ODDS=100; // 1 chance sur 100 à chaque NOUVEAU Pokémon trouvé : change ce nombre pour rendre le shiny plus ou moins rare
+const SPR=(n,s)=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/${s?'shiny':'regular'}.png`;
 const SPR3=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/regular.png`;
-const SPR2=n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.opts.shiny?'shiny/':''}${n}.png`;
+const SPR2=(n,s)=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${s?'shiny/':''}${n}.png`;
 const TYPES=["Normal","Feu","Eau","Plante","Électrik","Glace","Combat","Poison","Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Acier","Ténèbres","Fée"];
 const GENS=[[1,"Kanto",1,151],[2,"Johto",152,251],[3,"Hoenn",252,386],[4,"Sinnoh",387,493],[5,"Unys",494,649],[6,"Kalos",650,721],[7,"Alola",722,809],[8,"Galar",810,905],[9,"Paldea",906,1025]];
 const SEUILS=[25,50,75,100],STATS=[["hp","PV","#e74c3c"],["atk","ATQ","#e67e22"],["def","DÉF","#3498db"],["spe_atk","ATQ SPÉ","#9b59b6"],["spe_def","DÉF SPÉ","#16a085"],["vit","VIT","#f39c12"]];
@@ -123,14 +130,16 @@ const $=s=>document.querySelector(s),pad=n=>String(n).padStart(3,'0');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),loose=s=>norm(s).replace(/[^a-z0-9]/g,'');
 const gen=n=>(GENS.find(g=>n>=g[2]&&n<=g[3])||[])[0];
-const K={data:'pokedex.data.v1',badges:'pokedex.badges',stats:'pokedex.stats',opts:'pokedex.opts',game:'pokedex.game'};
+const K={data:'pokedex.data.v1',badges:'pokedex.badges',stats:'pokedex.stats',opts:'pokedex.opts',game:'pokedex.game',shiny:'pokedex.shiny'};
 const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
 const save=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){console.warn(e)}};
 const S={badges:new Set(load(K.badges,[])),stats:{parties:0,total:0,record:0,temps:0,uniques:[],type:{},gen:{},poke:{},...load(K.stats,{})},opts:{challenge:true,son:true,...load(K.opts,{})},game:load(K.game,null)};
+S.shiny=load(K.shiny,{});
 const sg=()=>save(K.game,S.game),sb=()=>save(K.badges,[...S.badges]),ss=()=>save(K.stats,S.stats),so=()=>save(K.opts,S.opts);
 const IMG=new Map();
-function img(n){const key=n+(S.opts.shiny?'s':'');let i=IMG.get(key);
-  if(!i){i=new Image();i.alt=P[n].fr;const u=[SPR(n),SPR2(n),SPR3(n)];let k=0;i.onerror=()=>{if(++k<u.length)i.src=u[k]};i.src=u[0];IMG.set(key,i)}return i}
+function img(n,s){const key=n+(s?'s':'');let i=IMG.get(key);
+  if(!i){i=new Image();i.alt=P[n].fr;const u=[SPR(n,s),SPR2(n,s),SPR3(n)];let k=0;i.onerror=()=>{if(++k<u.length)i.src=u[k]};i.src=u[0];IMG.set(key,i)}return i}
+const isSh=n=>!!(S.game&&(S.game.shiny||[]).includes(n));
 let PT=0;
 function precharger(){const q=Object.keys(P).map(Number),tk=++PT;let k=0;
   const w=()=>{if(k>=q.length||tk!=PT)return;const i=img(q[k++]);(i.complete?Promise.resolve():new Promise(r=>{i.onload=r;i.addEventListener('error',r)})).then(()=>i.decode().catch(()=>{})).then(w)};
@@ -139,7 +148,7 @@ const MQ=typeof matchMedia!='undefined'?matchMedia('(prefers-color-scheme: light
 function applyTheme(){const t=S.opts.theme;document.body.classList.toggle('light',t=='light'||(t=='auto'&&!!MQ&&MQ.matches))}
 applyTheme();if(MQ&&MQ.addEventListener)MQ.addEventListener('change',applyTheme);
 S.opts.min??=S.opts.challenge===false?0:60;
-S.opts.theme??='dark';S.opts.shiny??=false;S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?'en':'fr';document.documentElement.lang=S.opts.lang;
+S.opts.theme??='dark';S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?'en':'fr';document.documentElement.lang=S.opts.lang;
 const tr=(fr,en)=>S.opts.lang=='en'?en:fr,pn=n=>P[n][S.opts.lang=='en'?'en':'fr'];
 const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'Electric',Glace:'Ice',Combat:'Fighting',Poison:'Poison',Sol:'Ground',Vol:'Flying',Psy:'Psychic',Insecte:'Bug',Roche:'Rock',Spectre:'Ghost',Dragon:'Dragon',Acier:'Steel','Ténèbres':'Dark','Fée':'Fairy'};
 const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
@@ -160,6 +169,7 @@ function bip(f,d,t=0,ty='sine',v=.15){try{AC=AC||new(window.AudioContext||window
 function son(k){if(!S.opts.son)return;
   if(k=='cap'){bip(660,.12,0,'square',.07);bip(990,.2,.09,'square',.07)}
   else if(k=='succes')[523,659,784,1047,1319].forEach((f,i)=>bip(f,.3,.3+i*.1,'triangle',.18));
+  else if(k=='shiny')[784,988,1175,1568,1976].forEach((f,i)=>bip(f,.35,.1+i*.09,'triangle',.2));
   else if(k=='dup')bip(330,.14,0,'sine',.12);
   else if(k=='err')bip(140,.22,0,'sawtooth',.07)}
 const COL=['#ffd700','#ff6b6b','#66c0f4','#a4d007','#ffffff'];
@@ -172,6 +182,7 @@ const BADGES=(()=>{const b=[];
 [['premier_pas','Premier Pas','Attrape ton 1er Pokémon','First Steps','Catch your 1st Pokémon','1',1],['debutant','Apprenti','Attrape 10 % des Pokémon (102)','Apprentice','Catch 10% of all Pokémon (102)','10',102],['collectionneur','Collectionneur','Attrape 25 % des Pokémon (256)','Collector','Catch 25% of all Pokémon (256)','25',256],['expert','Expert','Attrape 50 % des Pokémon (512)','Expert','Catch 50% of all Pokémon (512)','50',512],['maitre','Maître Dresseur','Attrape 75 % des Pokémon (768)','Pokémon Master','Catch 75% of all Pokémon (768)','75',768],['legende','Légende Vivante','Attrape 100 % des Pokémon (1025)','Living Legend','Catch 100% of all Pokémon (1025)','100',1025]].forEach(([id,nf,df,ne,de,ic,s])=>b.push({id,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic,s,k:'p'}));
 TYPES.forEach(t=>SEUILS.forEach(s=>b.push({id:`type_${loose(t)}_${s}`,get nom(){return s==100?tr(`Grand Maître ${t}`,`${tname(t)} Grand Master`):tr(`Maître ${t} ${s} %`,`${tname(t)} Master ${s}%`)},get desc(){return s==100?tr(`Trouver tous les Pokémon de type ${t}`,`Find every ${tname(t)}-type Pokémon`):tr(`Attrape ${s} % des Pokémon de type ${t}`,`Catch ${s}% of ${tname(t)}-type Pokémon`)},ic:s==100?'GM':''+s,s,k:'t',t,u:s==100})));
 GENS.forEach(([g,n,d,f])=>SEUILS.forEach(s=>b.push({id:`gen_${g}_${s}`,get nom(){return s==100?tr(`Maître de ${n}`,`Master of ${gname(g)}`):tr(`Explorateur de ${n} ${s} %`,`${gname(g)} Explorer ${s}%`)},get desc(){return tr(`${s==100?'Trouver tous les':`Attrape ${s} % des`} Pokémon de la génération ${g} (${n}, #${d}-${f})`,`${s==100?'Find every':`Catch ${s}% of`} generation ${g} Pokémon (${gname(g)}, #${d}-${f})`)},ic:s==100?'GM':''+s,s,k:'g',g,u:s==100})));
+[[1,'Chromatique !','Shiny!','Trouve ton 1er Pokémon shiny','Find your 1st shiny Pokémon'],[5,'Chasseur de Chromatiques','Shiny Hunter','Trouve 5 Pokémon shiny différents','Find 5 different shiny Pokémon'],[10,'Œil de Lynx','Eagle Eye','Trouve 10 Pokémon shiny différents','Find 10 different shiny Pokémon'],[25,'Maître Chromatique','Shiny Master','Trouve 25 Pokémon shiny différents','Find 25 different shiny Pokémon'],[50,'Légende Chromatique','Shiny Legend','Trouve 50 Pokémon shiny différents','Find 50 different shiny Pokémon']].forEach(([s,nf,ne,df,de])=>b.push({id:'shiny_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic:'✨',s,k:'s',u:s==50}));
 [[25,'Chasseur de Succès','Achievement Hunter'],[50,'Collectionneur de Succès','Achievement Collector'],[75,'Expert des Succès','Achievement Expert'],[100,'Légende des Succès','Achievement Legend']].forEach(([s,nf,ne])=>b.push({id:'meta_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Obtenir ${s} % des succès`,`Obtain ${s}% of achievements`)},ic:''+s,s,k:'m'}));
 return b})();
 
@@ -179,7 +190,7 @@ function verifier(){
   const ids=S.game.ids,tc={},gc={},nv=[];
   ids.forEach(i=>{(P[i].t||[]).forEach(t=>tc[t]=(tc[t]||0)+1);const g=gen(i);gc[g]=(gc[g]||0)+1});
   for(const b of BADGES){if(b.k=='m'||S.badges.has(b.id))continue;
-    const ok=b.k=='t'?TT[b.t]&&100*(tc[b.t]||0)/TT[b.t]>=b.s:b.k=='g'?GT[b.g]&&100*(gc[b.g]||0)/GT[b.g]>=b.s:ids.length>=b.s;
+    const ok=b.k=='t'?TT[b.t]&&100*(tc[b.t]||0)/TT[b.t]>=b.s:b.k=='g'?GT[b.g]&&100*(gc[b.g]||0)/GT[b.g]>=b.s:b.k=='s'?Object.keys(S.shiny).length>=b.s:ids.length>=b.s;
     if(ok){S.badges.add(b.id);nv.push(b)}}
   const base=BADGES.filter(b=>b.k!='m'),p=100*base.filter(b=>S.badges.has(b.id)).length/base.length;
   BADGES.filter(b=>b.k=='m'&&!S.badges.has(b.id)&&p>=b.s).forEach(b=>{S.badges.add(b.id);nv.push(b)});
@@ -250,16 +261,14 @@ function defis(){
     $('#mdl .box').scrollTop=sc})
 }
 function reglages(){
-  const en=S.opts.lang=='en',th=S.opts.theme,sh=S.opts.shiny;
+  const en=S.opts.lang=='en',th=S.opts.theme;
   modal(`<h2>⚙️ ${tr('Paramètres','Settings')}</h2>
   <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>🇫🇷 Français</button><button class="chip ${en?'act':''}" data-l=en>🇬🇧 English</button></div>
   <h4>${tr('Thème','Theme')}</h4><div class=chips>${[['dark','🌙',tr('Sombre','Dark')],['light','☀️',tr('Clair','Light')],['auto','🖥️','Auto']].map(([v,e,l])=>`<button class="chip ${th==v?'act':''}" data-th=${v}>${e} ${l}</button>`).join('')}</div>
-  <h4>Sprites</h4><div class=chips><button class="chip ${!sh?'act':''}" data-sh=0>${tr('Normaux','Normal')}</button><button class="chip ${sh?'act':''}" data-sh=1>✨ Shiny</button></div>
   <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>`,
   ()=>{const q=s=>document.querySelectorAll('#mdl '+s);
     q('[data-l]').forEach(b=>b.onclick=()=>{S.opts.lang=b.dataset.l;so();document.documentElement.lang=S.opts.lang;RV();reglages()});
     q('[data-th]').forEach(b=>b.onclick=()=>{S.opts.theme=b.dataset.th;so();applyTheme();reglages()});
-    q('[data-sh]').forEach(b=>b.onclick=()=>{S.opts.shiny=b.dataset.sh=='1';so();if(pret)precharger();RV();reglages()});
     q('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()})})
 }
 async function demarrer(){
@@ -268,7 +277,7 @@ async function demarrer(){
   catch(e){ld.err=1;ld.m=tr('Erreur : ','Error: ')+e.message;majLd()}
 }
 function majLd(){
-  if(pret&&$('#wait')){stats('c');return}const e=$('#ld');if(!e)return;
+  if(pret&&$('#wait')){stats($('#wait').dataset.tab||'c');return}const e=$('#ld');if(!e)return;
   const b=$('#st');if(b)b.disabled=!pret;
   if(pret){e.remove();return}
   e.innerHTML=ld.err?`${esc(ld.m)} <button id=re>${tr('Réessayer','Retry')}</button>`:`⏳ ${esc(ld.m)} ${Math.round(ld.p)} %`;
@@ -286,15 +295,16 @@ function menu(){
   $('#rg').onclick=reglages;$('#df').onclick=defis;majLd();
   $('#st').onclick=()=>{const c=cibleDe(S.opts.cible);if(c&&!cibleIds({cible:c}).length){defis();return}finirPartie(false);jeu()};
   $('#su').onclick=()=>succes();$('#sa').onclick=()=>stats();
-  $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
+  $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game,shiny:S.shiny})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
   $('#im').onclick=()=>$('#fi').click();
   $('#fi').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());
     if(Array.isArray(j.badges))S.badges=new Set(j.badges.map(String));
     if(j.stats&&typeof j.stats=='object')Object.assign(S.stats,j.stats);
     if(j.opts&&typeof j.opts=='object')Object.assign(S.opts,j.opts);
+    if(j.shiny&&typeof j.shiny=='object')S.shiny=j.shiny;save(K.shiny,S.shiny);
     S.game=j.game&&Array.isArray(j.game.ids)?j.game:null;sb();ss();so();sg();menu()}catch{alert(tr('Fichier de sauvegarde invalide.','Invalid save file.'))}};
   let tz;$('#rz').onclick=()=>{const b=$('#rz');
-    if(b.dataset.ok){clearTimeout(tz);[K.badges,K.stats,K.opts,K.game].forEach(k=>save(k,null));location.reload();return}
+    if(b.dataset.ok){clearTimeout(tz);[K.badges,K.stats,K.opts,K.game,K.shiny].forEach(k=>save(k,null));location.reload();return}
     b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase');b.style.background='#c0392b';
     tz=setTimeout(()=>{delete b.dataset.ok;b.textContent='🗑 '+tr('Tout effacer','Erase everything');b.style.background=''},4000)};
 }
@@ -308,7 +318,7 @@ function jeu(){
   $('#rg').onclick=reglages;
   $('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
   $('#mn').onclick=()=>{finirPartie(true);menu()};
-  $('#go').onclick=chercher;$('#q').oninput=e=>rechercher(e.target.value).forEach(img);$('#q').onkeydown=e=>{if(e.key=='Enter')chercher()};
+  $('#go').onclick=chercher;$('#q').oninput=e=>rechercher(e.target.value).forEach(n=>img(n));$('#q').onkeydown=e=>{if(e.key=='Enter')chercher()};
   const l=$('#lst');l.onclick=l.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)montrer([+r.dataset.n],g.fin)};
   let ta;$('#arr').onclick=()=>{const b=$('#arr');
     if(b.dataset.ok){clearTimeout(ta);terminer('quit');return}
@@ -324,7 +334,7 @@ function jeu(){
   tick();if(!g.fin){tm=setInterval(tick,500);$('#q').focus()}
 }
 function fb(t,c){const f=$('#fb');f.textContent=t;f.style.color=c}
-function liste(){const g=S.game;$('#lst').innerHTML=[...g.ids].sort((a,b)=>a-b).map(n=>`<div data-n=${n}>#${pad(n)} - ${esc(pn(n))}</div>`).join('');$('#cpt').textContent=`${tr('Trouvés','Found')} : ${g.ids.length}/${cibleIds(g).length}`}
+function liste(){const g=S.game;$('#lst').innerHTML=[...g.ids].sort((a,b)=>a-b).map(n=>`<div data-n=${n}>#${pad(n)} - ${isSh(n)?'✨ ':''}${esc(pn(n))}</div>`).join('');$('#cpt').textContent=`${tr('Trouvés','Found')} : ${g.ids.length}/${cibleIds(g).length}`}
 const phon=s=>loose(s).replace(/ph/g,'f').replace(/qu|k/g,'c').replace(/tch/g,'ch').replace(/y/g,'i').replace(/w/g,'v').replace(/h/g,'').replace(/(.)\1+/g,'$1');
 function dl(a,b){ // distance de Damerau-Levenshtein : une lettre inversée = 1 erreur
   const n=b.length;let pp=null,p=Array.from({length:n+1},(_,j)=>j);
@@ -342,23 +352,28 @@ function suggerer(t){
     if(best<=ok&&best/x.length<=.34)res.push({id,nom,got:!!(g&&g.ids.includes(id)),rank:best+(g&&g.ids.includes(id)?1.5:0)})}
   res.sort((a,b)=>a.rank-b.rank||a.id-b.id);
   return res.filter(r=>r.rank<=res[0].rank+.6).slice(0,3)} // seulement les plus proches du meilleur
-function chercher(){
+async function chercher(){
   const g=S.game;if(g.fin)return;const i=$('#q'),t=i.value.trim();if(!t)return;i.value='';
   let ns=rechercher(t);if(!ns.length){fb(tr(`« ${t} » introuvable`,`"${t}" not found`),'#e53935');son('err');anim(i,'shake');const s=suggerer(t);
     if(s.length){const f=$('#fb');f.append(tr(' — tu voulais dire ',' — did you mean '));s.forEach(r=>{const b=document.createElement('button');b.className='sug';b.textContent=(r.got?'✓ ':'')+r.nom;b.onclick=()=>{$('#q').value=r.nom;chercher()};f.append(b)});f.append(' ?')}
     return}
   if(g.cible){const ci=new Set(cibleIds(g)),ok=ns.filter(n=>ci.has(n));if(!ok.length){fb(tr(`${pn(ns[0])} ne fait pas partie du défi (${labelCible(g.cible)})`,`${pn(ns[0])} is not part of the challenge (${labelCible(g.cible)})`),'#ff8800');son('err');anim(i,'shake');return}ns=ok}
   const nv=ns.filter(n=>!g.ids.includes(n));
-  if(nv.length){g.ids.push(...nv);g.vu=Date.now();sg();verifier()}
+  let sh=[];
+  if(nv.length){sh=nv.filter(()=>Math.random()*SHINY_ODDS<1);g.ids.push(...nv);
+    if(sh.length){g.shiny=[...(g.shiny||[]),...sh];sh.forEach(n=>S.shiny[n]=(S.shiny[n]||0)+1);save(K.shiny,S.shiny);
+      await Promise.race([Promise.all(sh.map(n=>img(n,true).decode().catch(()=>{}))),new Promise(r=>setTimeout(r,900))]);
+      sh.forEach(n=>toast(tr('✨ Shiny !','✨ Shiny!'),pn(n),'✨'))}
+    g.vu=Date.now();sg();verifier()}
   const noms=ns.map(pn).join(tr(' et ',' and '));
-  fb(nv.length?tr(`${noms} ${ns.length>1?'ajoutés':'ajouté'} !`,`${noms} added!`):tr(`${noms} déjà dans la collection`,`${noms} already in your collection`),nv.length?'#2e9e4f':'#ff8800');
+  fb(sh.length?tr(`✨ SHINY ! ${noms} ${ns.length>1?'ajoutés':'ajouté'} !`,`✨ SHINY! ${noms} added!`):nv.length?tr(`${noms} ${ns.length>1?'ajoutés':'ajouté'} !`,`${noms} added!`):tr(`${noms} déjà dans la collection`,`${noms} already in your collection`),sh.length?'#d4a000':nv.length?'#2e9e4f':'#ff8800');
   montrer(ns);liste();
-  if(nv.length){son('cap');etincelles();$('#spr').querySelectorAll('img').forEach(x=>anim(x,'pop'));anim($(`#lst [data-n="${nv[0]}"]`),'new')}
+  if(nv.length){son(sh.length?'shiny':'cap');etincelles();if(sh.length){etincelles();$('#spr').querySelectorAll('img').forEach(x=>anim(x,'glow'))}$('#spr').querySelectorAll('img').forEach(x=>anim(x,'pop'));anim($(`#lst [data-n="${nv[0]}"]`),'new')}
   else{son('dup');$('#spr').querySelectorAll('img').forEach(x=>anim(x,'shake'))}
 }
 function montrer(ids,statut){
   $('#num').textContent=ids.map(n=>'#'+pad(n)).join(' / ');$('#nom').textContent=ids.map(pn).join(' / ');
-  $('#spr').replaceChildren(...ids.map(n=>{const i=img(n);i.className=ids.length>1?'duo':'';return i}));
+  $('#spr').replaceChildren(...ids.map(n=>{const i=img(n,isSh(n));i.className=ids.length>1?'duo':'';return i}));
   $('#sta').innerHTML=ids.length==1?fiche(P[ids[0]]):'';
   if(statut){const ok=S.game.ids.includes(ids[0]);fb(`${pn(ids[0])} ${ok?tr('trouvé !','found!'):tr('non trouvé !','not found!')}`,ok?'#2e9e4f':'#c0392b')}
 }
@@ -372,7 +387,7 @@ function terminer(k){const g=S.game;g.fin=true;g.titre=k;g.vu=g.mode=='c'?Math.m
 function fin(k){
   clearInterval(tm);const g=S.game,f=new Set(g.ids),L=cibleIds(g),T=TIT[k],titre=T?tr(T[0],T[1]):k;
   $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=$('#hint').hidden=true;
-  $('#lst').innerHTML=L.map(n=>`<div data-n=${n} class=${f.has(n)?'ok':'ko'}>#${pad(n)} - ${esc(pn(n))}</div>`).join('');
+  $('#lst').innerHTML=L.map(n=>`<div data-n=${n} class=${f.has(n)?'ok':'ko'}>#${pad(n)} - ${isSh(n)?'✨ ':''}${esc(pn(n))}</div>`).join('');
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
   if(!$('#shr')){const b=document.createElement('button');b.id='shr';b.textContent=tr('📤 Partager mon score','📤 Share my score');b.style.marginTop='8px';
@@ -384,7 +399,7 @@ function fin(k){
 function succes(tab='p'){
   RV=()=>succes(tab);
   const ob=b=>S.badges.has(b.id),n=BADGES.filter(ob).length,p=Math.round(100*n/BADGES.length);
-  const cats=[['p','🎯 '+tr('Progression','Progress')],['t','🔥 Types'],['g','🗺️ '+tr('Générations','Generations')],['m','✨ '+tr('Méta','Meta')]];
+  const cats=[['p','🎯 '+tr('Progression','Progress')],['t','🔥 Types'],['g','🗺️ '+tr('Générations','Generations')],['s','🌟 Shiny'],['m','✨ '+tr('Méta','Meta')]];
   const carte=b=>`<div class="card ${ob(b)?'got':''} ${b.u?'ult':''} ${b.k=='m'?'meta':''}"><div class=ico>${b.ic}</div><div><h4>${esc(b.nom)}</h4><p>${esc(b.desc)}</p><small>${ob(b)?(b.k=='m'?tr('✨ OBTENU','✨ UNLOCKED'):b.u?tr('✨ GRAND MAÎTRE','✨ GRAND MASTER'):tr('DÉBLOQUÉ','UNLOCKED')):tr('VERROUILLÉ','LOCKED')}</small></div></div>`;
   const rangee=(t,s,bs,c)=>{const k=bs.filter(ob).length;return`<div class="row ${c} ${k==bs.length?'full':''}"><div><h4>${t}${k==bs.length?' ✨':''}</h4><p>${s}</p><small>${k}/${bs.length} ${tr('paliers débloqués','tiers unlocked')}</small></div><div class=pips>${bs.map(b=>`<span class="pip ${ob(b)?'got':''} ${b.u?'ult':''}" title="${esc(b.nom)}">${b.ic}</span>`).join('')}</div></div>`};
   let body;
@@ -400,15 +415,23 @@ function stats(tab='a'){
   const s=S.stats,top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1])[0],loc=S.opts.lang=='en'?'en-GB':'fr-FR';
   const ty=top(s.type),ge=top(s.gen),gl=g=>`${tr('Génération','Generation')} ${g} — ${gname(g)}`,cp=x=>tr(`${x} capture(s)`,`${x} catch(es)`);
   let body;
-  if(!s.parties)body=`<p style="margin:50px 0">${tr("Aucune partie jouée pour l'instant.<br>Lance une partie depuis le menu pour générer des statistiques !",'No games played yet.<br>Start a game from the menu to generate statistics!')}</p>`;
+  const NS=Object.keys(S.shiny).length;
+  if(tab=='s'){
+    if(!pret)body=`<p id=wait data-tab=s style="margin:50px 0">⏳ ${tr('Chargement du Pokédex...','Loading the Pokédex...')}</p>`;
+    else{const tot=Object.keys(P).length,pc=Math.round(100*NS/tot);
+      body=`<p class=gold>✨ ${NS} / ${tot} shiny ${tr('trouvés','found')} (${pc} %)</p><div class=pb><i style="width:${Math.max(pc,NS?1:0)}%"></i></div>
+      <p class=small style="margin:8px 0">${tr(`Chaque nouveau Pokémon trouvé a 1 chance sur ${SHINY_ODDS} d'être shiny.`,`Every newly found Pokémon has a 1 in ${SHINY_ODDS} chance to be shiny.`)}</p>
+      <div class=sctl><select id=sg2><option value=0>${tr('Toutes les générations','All generations')}</option>${GENS.map(g=>`<option value=${g[0]} ${SV.sg==g[0]?'selected':''}>${tr('Gén.','Gen.')} ${g[0]} — ${gname(g[0])}</option>`).join('')}</select></div>
+      <div class=swrap><div class=dex id=dx></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`}
+  }else if(!s.parties)body=`<p style="margin:50px 0">${tr("Aucune partie jouée pour l'instant.<br>Lance une partie depuis le menu pour générer des statistiques !",'No games played yet.<br>Start a game from the menu to generate statistics!')}</p>`;
   else if(tab=='a'){
-    const T=[['🎮',s.parties,tr('Parties jouées','Games played')],['🏆',`${s.record} / ${TOTAL}`,tr('Record en une partie','Best in one game')],['🔴',`${s.uniques.length} / ${TOTAL}`,tr('Pokémon différents trouvés','Different Pokémon found')],['📦',s.total,tr('Captures au total (parties confondues)','Total catches (all games)')],['⏱️',fmt(s.temps),tr('Temps de jeu total','Total play time')],['✨',`${S.badges.size} / ${BADGES.length}`,tr('Succès débloqués','Achievements unlocked')],['🔥',ty?tname(ty[0]):'—',tr('Type favori','Favorite type')+(ty?` — ${cp(ty[1])}`:'')],['🗺️',ge?gl(ge[0]):'—',tr('Génération favorite','Favorite generation')+(ge?` — ${cp(ge[1])}`:'')]];
+    const T=[['🎮',s.parties,tr('Parties jouées','Games played')],['✨',`${NS} / ${TOTAL}`,tr('Shiny trouvés','Shiny found')],['🏆',`${s.record} / ${TOTAL}`,tr('Record en une partie','Best in one game')],['🔴',`${s.uniques.length} / ${TOTAL}`,tr('Pokémon différents trouvés','Different Pokémon found')],['📦',s.total,tr('Captures au total (parties confondues)','Total catches (all games)')],['⏱️',fmt(s.temps),tr('Temps de jeu total','Total play time')],['✨',`${S.badges.size} / ${BADGES.length}`,tr('Succès débloqués','Achievements unlocked')],['🔥',ty?tname(ty[0]):'—',tr('Type favori','Favorite type')+(ty?` — ${cp(ty[1])}`:'')],['🗺️',ge?gl(ge[0]):'—',tr('Génération favorite','Favorite generation')+(ge?` — ${cp(ge[1])}`:'')]];
     body=`<div class=grid>${T.map(([e,v,l])=>`<div class=tile><span class=e>${e}</span><div><h4 style="color:var(--gold)">${esc(v)}</h4><p>${l}</p></div></div>`).join('')}</div>`;
   }else if(tab=='h'){
     const H=(s.hist||[]).slice().reverse(),mx=Math.max(1,...H.map(x=>x.n));
     body=`<p class=gold style="margin-bottom:8px">${tr(`Tes ${H.length} dernières parties`,`Your last ${H.length} games`)}</p><div style="display:flex;align-items:flex-end;gap:3px;height:120px;max-width:560px;margin:0 auto 14px">${H.slice().reverse().map(x=>`<i title="${x.n}" style="flex:1;background:var(--gold);border-radius:3px 3px 0 0;height:${Math.max(3,100*x.n/mx)}%"></i>`).join('')}</div>
     <div class=tbl style="max-width:620px">${H.map(x=>`<div><span>${new Date(x.d).toLocaleDateString(loc)}${x.c?' · '+esc(x.c):''}</span><span>${x.n} · ${fmt(x.t)} · ${x.m?x.m+' min':tr('libre','free')}${x.i?' · 💡'+x.i:''}</span></div>`).join('')||`<p>${tr('Aucune partie enregistrée.','No games recorded.')}</p>`}</div>`;
-  }else if(!pret)body=`<p id=wait style="margin:50px 0">⏳ ${tr("Chargement du Pokédex... la liste s'affichera toute seule.",'Loading the Pokédex... the list will appear by itself.')}</p>`;
+  }else if(!pret)body=`<p id=wait data-tab=${tab} style="margin:50px 0">⏳ ${tr("Chargement du Pokédex... la liste s'affichera toute seule.",'Loading the Pokédex... the list will appear by itself.')}</p>`;
   else{
     const tot=Object.keys(P).length,nb=Object.keys(P).filter(n=>s.poke[n]).length,pc=Math.round(100*nb/tot),seg=(k,o)=>`<div class=seg>${o.map(([v,l])=>`<button data-seg=${k} data-v=${v} class="${SV[k]==v?'act':''}">${l}</button>`).join('')}</div>`;
     body=`<p class=gold>${nb} / ${tot} ${tr('Pokémon trouvés','Pokémon found')} (${pc} %)</p><div class=pb><i style="width:${pc}%"></i></div>
@@ -418,8 +441,9 @@ function stats(tab='a'){
     <p id=scount style="font-size:.8rem"></p>
     <div class=swrap><div class="lst slst" id=sl></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`;
   }
-  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['h','📈 '+tr('Historique','History')]].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties||NS?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['h','📈 '+tr('Historique','History')],['s','✨ Shiny']].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>stats(b.dataset.t));$('#bk').onclick=menu;
+  if(tab=='s'&&$('#dx')){$('#sg2').onchange=e=>{SV.sg=+e.target.value;dex()};const dx=$('#dx');dx.onclick=dx.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detail3(+r.dataset.n)};dex()}
   if(tab=='c'&&$('#sl')){
     $('#sq').oninput=e=>{SV.q=e.target.value;liste2()};$('#sg').onchange=e=>{SV.g=+e.target.value;liste2()};
     document.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>{SV[b.dataset.seg]=b.dataset.v;document.querySelectorAll(`[data-seg=${b.dataset.seg}]`).forEach(x=>x.classList.toggle('act',x==b));liste2()});
@@ -427,7 +451,21 @@ function stats(tab='a'){
     liste2();
   }
 }
-const SV={f:'all',o:'n',q:'',g:0,sel:0};
+const SV={f:'all',o:'n',q:'',g:0,sel:0,sg:0,ss:0};
+function dex(){
+  const ids=Object.keys(P).map(Number).filter(n=>!SV.sg||gen(n)==SV.sg);
+  $('#dx').innerHTML=ids.map(n=>S.shiny[n]?`<button class="cell got${n==SV.ss?' sel':''}" data-n=${n} title="${esc(pn(n))}"><img src="${SPR(n,true)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},true)"></button>`:`<button class="cell${n==SV.ss?' sel':''}" data-n=${n}>#${pad(n)}</button>`).join('');
+  detail3(ids.includes(SV.ss)?SV.ss:(ids.find(n=>S.shiny[n])||ids[0]||1));
+}
+function detail3(n){
+  SV.ss=n;const c=S.shiny[n];let i;
+  if(c)i=img(n,true);else{i=new Image();i.src=SPR(n);i.className='sil'}
+  if(c)i.className='';
+  $('#dn').textContent=`#${pad(n)} ${c?pn(n):'???'}`;$('#ds').replaceChildren(i);
+  $('#dt').textContent=c?`${(P[n].t||[]).map(tname).join(' / ')||'—'} · ${gname(gen(n))||''}`:'';
+  $('#dc').textContent=c?`✨ ${tr('Trouvé','Found')} ×${c}`:tr('Pas encore de shiny','No shiny yet');$('#dc').style.color=c?'var(--gold)':'var(--lock)';
+  document.querySelectorAll('#dx .sel').forEach(x=>x.classList.remove('sel'));const r=$(`#dx [data-n="${n}"]`);if(r)r.classList.add('sel');
+}
 function liste2(){
   const s=S.stats.poke,q=norm(SV.q).replace('#',''),num=/^\d+$/.test(q);
   let ids=Object.keys(P).map(Number).filter(n=>(!SV.g||gen(n)==SV.g)&&(SV.f=='all'||(SV.f=='ok')==!!s[n])&&(!q||(num?n==+q:norm(P[n].fr).includes(q)||norm(P[n].en).includes(q))));
