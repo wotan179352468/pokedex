@@ -96,14 +96,26 @@ h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-alig
 .toast{background-image:linear-gradient(110deg,transparent 30%,rgba(255,215,0,.28) 50%,transparent 70%);background-size:200% 100%;display:flex;gap:12px;align-items:center;width:min(350px,92vw);background:var(--st);border:2px solid var(--gold);border-radius:8px;padding:10px 14px;animation:in .3s,shine 1.3s .3s;transition:opacity .4s}.toast.out{opacity:0}
 .toast .ic{font:800 1.6rem Arial;color:var(--gold);min-width:46px;text-align:center}.toast h4{color:var(--gold)}.toast p{font-size:.8rem}
 @keyframes in{from{transform:translateX(40px);opacity:0}}
+/* thème clair */
+body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
+body.light button{color:#2c3e50}
+body.light .big,body.light .on,body.light .off,body.light .defbtn,body.light .stop,body.light .top button,body.light .srch button,body.light .sug,body.light .small button{color:#fff}
+body.light .steam{color:var(--blue)}body.light .vert{color:var(--green)}
+body.light .chip[style]{color:#fff;text-shadow:0 1px 2px #0008}
+body.light .page h1,body.light .box h2,body.light .row h4,body.light .sdet .nom{color:#1f2d3d}
+body.light .sctl input,body.light .sctl select{color:#2c3e50}
+body.light .side{background:#d3deea}body.light .side h3{background:#fff;color:#2c3e50}body.light .gold{color:#b8860b}
+body.light .card.ult.got{background:#f6e8fa}body.light .card.meta.got{background:#e3f0fb}
+body.light .toast{box-shadow:0 4px 14px #0003}
 </style>
 </head>
 <body>
 <div id="app"></div><div id="toasts"></div>
 <script>
 const TOTAL=1025,DUREE=3600,dur=g=>g.duree||DUREE,API='https://tyradex.app/api/v1';
-const SPR=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/regular.png`;
-const SPR2=n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
+const SPR=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/${S.opts.shiny?'shiny':'regular'}.png`;
+const SPR3=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/regular.png`;
+const SPR2=n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${S.opts.shiny?'shiny/':''}${n}.png`;
 const TYPES=["Normal","Feu","Eau","Plante","Électrik","Glace","Combat","Poison","Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Acier","Ténèbres","Fée"];
 const GENS=[[1,"Kanto",1,151],[2,"Johto",152,251],[3,"Hoenn",252,386],[4,"Sinnoh",387,493],[5,"Unys",494,649],[6,"Kalos",650,721],[7,"Alola",722,809],[8,"Galar",810,905],[9,"Paldea",906,1025]];
 const SEUILS=[25,50,75,100],STATS=[["hp","PV","#e74c3c"],["atk","ATQ","#e67e22"],["def","DÉF","#3498db"],["spe_atk","ATQ SPÉ","#9b59b6"],["spe_def","DÉF SPÉ","#16a085"],["vit","VIT","#f39c12"]];
@@ -117,12 +129,17 @@ const save=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k
 const S={badges:new Set(load(K.badges,[])),stats:{parties:0,total:0,record:0,temps:0,uniques:[],type:{},gen:{},poke:{},...load(K.stats,{})},opts:{challenge:true,son:true,...load(K.opts,{})},game:load(K.game,null)};
 const sg=()=>save(K.game,S.game),sb=()=>save(K.badges,[...S.badges]),ss=()=>save(K.stats,S.stats),so=()=>save(K.opts,S.opts);
 const IMG=new Map();
-function img(n){let i=IMG.get(n);if(!i){i=new Image();i.alt=P[n].fr;i.onerror=()=>{i.onerror=null;i.src=SPR2(n)};i.src=SPR(n);IMG.set(n,i)}return i}
-function precharger(){const q=Object.keys(P).map(Number);let k=0;
-  const w=()=>{if(k>=q.length)return;const i=img(q[k++]);(i.complete?Promise.resolve():new Promise(r=>{i.onload=r;i.addEventListener('error',r)})).then(()=>i.decode().catch(()=>{})).then(w)};
+function img(n){const key=n+(S.opts.shiny?'s':'');let i=IMG.get(key);
+  if(!i){i=new Image();i.alt=P[n].fr;const u=[SPR(n),SPR2(n),SPR3(n)];let k=0;i.onerror=()=>{if(++k<u.length)i.src=u[k]};i.src=u[0];IMG.set(key,i)}return i}
+let PT=0;
+function precharger(){const q=Object.keys(P).map(Number),tk=++PT;let k=0;
+  const w=()=>{if(k>=q.length||tk!=PT)return;const i=img(q[k++]);(i.complete?Promise.resolve():new Promise(r=>{i.onload=r;i.addEventListener('error',r)})).then(()=>i.decode().catch(()=>{})).then(w)};
   for(let c=0;c<4;c++)w()}
+const MQ=typeof matchMedia!='undefined'?matchMedia('(prefers-color-scheme: light)'):null;
+function applyTheme(){const t=S.opts.theme;document.body.classList.toggle('light',t=='light'||(t=='auto'&&!!MQ&&MQ.matches))}
+applyTheme();if(MQ&&MQ.addEventListener)MQ.addEventListener('change',applyTheme);
 S.opts.min??=S.opts.challenge===false?0:60;
-S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?'en':'fr';document.documentElement.lang=S.opts.lang;
+S.opts.theme??='dark';S.opts.shiny??=false;S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?'en':'fr';document.documentElement.lang=S.opts.lang;
 const tr=(fr,en)=>S.opts.lang=='en'?en:fr,pn=n=>P[n][S.opts.lang=='en'?'en':'fr'];
 const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'Electric',Glace:'Ice',Combat:'Fighting',Poison:'Poison',Sol:'Ground',Vol:'Flying',Psy:'Psychic',Insecte:'Bug',Roche:'Rock',Spectre:'Ghost',Dragon:'Dragon',Acier:'Steel','Ténèbres':'Dark','Fée':'Fairy'};
 const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
@@ -233,12 +250,17 @@ function defis(){
     $('#mdl .box').scrollTop=sc})
 }
 function reglages(){
-  const en=S.opts.lang=='en';
+  const en=S.opts.lang=='en',th=S.opts.theme,sh=S.opts.shiny;
   modal(`<h2>⚙️ ${tr('Paramètres','Settings')}</h2>
   <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>🇫🇷 Français</button><button class="chip ${en?'act':''}" data-l=en>🇬🇧 English</button></div>
+  <h4>${tr('Thème','Theme')}</h4><div class=chips>${[['dark','🌙',tr('Sombre','Dark')],['light','☀️',tr('Clair','Light')],['auto','🖥️','Auto']].map(([v,e,l])=>`<button class="chip ${th==v?'act':''}" data-th=${v}>${e} ${l}</button>`).join('')}</div>
+  <h4>Sprites</h4><div class=chips><button class="chip ${!sh?'act':''}" data-sh=0>${tr('Normaux','Normal')}</button><button class="chip ${sh?'act':''}" data-sh=1>✨ Shiny</button></div>
   <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>`,
-  ()=>{document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.opts.lang=b.dataset.l;so();document.documentElement.lang=S.opts.lang;RV();reglages()});
-    document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()})})
+  ()=>{const q=s=>document.querySelectorAll('#mdl '+s);
+    q('[data-l]').forEach(b=>b.onclick=()=>{S.opts.lang=b.dataset.l;so();document.documentElement.lang=S.opts.lang;RV();reglages()});
+    q('[data-th]').forEach(b=>b.onclick=()=>{S.opts.theme=b.dataset.th;so();applyTheme();reglages()});
+    q('[data-sh]').forEach(b=>b.onclick=()=>{S.opts.shiny=b.dataset.sh=='1';so();if(pret)precharger();RV();reglages()});
+    q('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()})})
 }
 async function demarrer(){
   ld={p:0,m:tr('Chargement du Pokédex...','Loading the Pokédex...'),err:0};majLd();
