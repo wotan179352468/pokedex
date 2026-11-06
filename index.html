@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pokédex — Attrape-les tous !</title>
+<meta name="description" content="Retrouve les 1025 Pokémon de mémoire, en temps limité ! Succès, statistiques et défis entre amis.">
+<meta property="og:title" content="Pokédex — Attrape-les tous !"><meta property="og:type" content="website">
+<meta property="og:description" content="Retrouve les 1025 Pokémon de mémoire. Saurais-tu faire mieux que moi ?">
+<meta property="og:image" content="https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/25/regular.png"><meta name="theme-color" content="#DC0A2D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🔴%3C/text%3E%3C/svg%3E">
+<style>
+:root{--bg:#1a1a2e;--red:#DC0A2D;--dark:#171a21;--st:#1b2838;--card:#2a475e;--blue:#66c0f4;--gold:#ffd700;--green:#a4d007;--txt:#c6d4df;--lock:#4b5863;--pur:#a389d4}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+button{font:inherit;font-weight:700;cursor:pointer;border:0;border-radius:8px;color:#fff;background:var(--card);padding:.6em 1.1em}
+button:hover:not(:disabled){filter:brightness(1.2)}button:disabled{opacity:.45;cursor:default}
+h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-align:center}
+.logo{font-size:clamp(2.8rem,11vw,5.5rem);color:var(--red);letter-spacing:.06em;margin:.3em 0 0;text-shadow:0 4px 0 #6d0517}
+.sub{font-size:1.4rem;color:#7F8C8D;margin:.3em 0 .6em}.gold{color:#F1C40F;font-weight:700}
+.menu>button{display:block;margin:12px auto;min-width:min(340px,92%)}
+.big{background:var(--red);font-size:1.7rem;padding:.7em 1em;box-shadow:0 5px 0 #6d0517}
+.on{background:#27ae60}.off{background:#c0392b}.steam{background:var(--st);color:var(--blue)}.vert{color:var(--green)}
+.menu select{display:block;margin:12px auto;min-width:min(340px,92%);padding:.7em;border-radius:8px;border:0;background:var(--card);color:#fff;font:inherit;font-weight:700}
+.small{font-size:.8rem;color:#7F8C8D;margin-top:18px}.small button{font-size:.8rem;margin:3px;background:#2C3E50}
+.bar{width:min(500px,90%);height:26px;margin:20px auto 8px;background:#2C3E50;border-radius:13px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:#F39C12;transition:width .2s}
+/* jeu */
+.top{background:var(--red);display:flex;justify-content:space-between;align-items:center;padding:10px 18px;position:sticky;top:0;z-index:5}
+.top b{font-size:1.9rem;color:#fff;letter-spacing:.06em}.top button{background:#2C3E50;margin-left:6px}
+.jeu{display:grid;grid-template-columns:260px 1fr;gap:12px;padding:12px;background:#A8D8A8;min-height:calc(100vh - 64px)}
+.side{background:#2C3E50;border-radius:10px;padding:10px;display:flex;flex-direction:column;text-align:center;height:calc(100vh - 90px);position:sticky;top:76px}
+.side h3{background:var(--st);color:#F1C40F;padding:8px;border-radius:6px;font-size:1rem}
+.lst{flex:1;overflow:auto;background:#ECF0F1;color:#222;margin:8px 0;border-radius:6px;font:600 .85rem Consolas,monospace;text-align:left;user-select:none}
+.lst div{padding:3px 8px;cursor:pointer;white-space:nowrap}.lst div:hover{background:#d5dbdf}
+.lst .ok{background:#27ae60;color:#fff}.lst .ko{background:#c0392b;color:#fff}
+.tmr{color:#F39C12;font-weight:700;font-size:1.2rem}.stop{background:#c0392b}
+.det{background:#ECF0F1;color:#2C3E50;border-radius:10px;padding:16px;text-align:center}
+.fb{min-height:1.6em;white-space:pre-line;font-weight:700;color:#7F8C8D;margin-bottom:10px}
+.srch{display:flex;gap:8px;max-width:560px;margin:0 auto}.srch input{flex:1;min-width:0;font-size:1.2rem;padding:10px;text-align:center;border:2px solid #bdc3c7;border-radius:8px}
+.srch button{background:#2C3E50}.num{font-size:1.3rem;color:#7F8C8D;margin-top:14px;min-height:1.5em}
+.nom{font-size:clamp(1.8rem,6vw,2.6rem);font-weight:800;min-height:1.2em}
+.spr{display:flex;justify-content:center;min-height:120px}.spr img{width:min(300px,70vw);height:min(300px,70vw);object-fit:contain;image-rendering:auto}.spr img.duo{width:min(190px,38vw);height:min(190px,38vw)}
+.sta{display:grid;grid-template-columns:1fr 1fr;gap:6px 22px;max-width:520px;margin:6px auto;text-align:left}
+.sr{display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700}.sr span{width:54px}.sr em{flex:1;height:12px;background:#dfe6e9;border-radius:6px;overflow:hidden}.sr em i{display:block;height:100%;border-radius:6px}.sr b{width:26px;font-family:Consolas,monospace}
+.tal{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}.tal span{background:#34495e;color:#fff;border-radius:10px;padding:2px 11px;font-size:.75rem;font-weight:700}.tal span.tc{background:#8e44ad}
+.sug{background:#2C3E50;padding:.15em .8em;margin:0 3px;font-size:.9rem;border-radius:12px}
+.sctl{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:900px;margin:0 auto 10px}
+.sctl input,.sctl select{padding:8px 10px;border-radius:8px;border:0;background:var(--card);color:#fff;font:inherit;min-width:0}.sctl input{flex:1;min-width:170px}
+.seg{display:flex;gap:2px}.seg button{border-radius:0;background:var(--card);color:var(--txt);padding:.5em .9em}.seg button:first-child{border-radius:8px 0 0 8px}.seg button:last-child{border-radius:0 8px 8px 0}.seg button.act{background:var(--blue);color:var(--dark)}
+.swrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;max-width:900px;margin:12px auto 0;text-align:left}
+.slst{max-height:68vh;margin:0!important}.slst div{display:flex;justify-content:space-between;align-items:center;padding:5px 10px}.slst b{background:rgba(0,0,0,.25);border-radius:10px;padding:0 10px}.slst .sel{outline:3px solid var(--gold);outline-offset:-3px}
+.sdet{background:var(--st);border:1px solid var(--card);border-radius:10px;padding:14px;text-align:center;position:sticky;top:14px;height:fit-content}
+.sdet .nom{color:#fff;font-size:1.5rem}.sdet .spr{min-height:170px}.sdet .spr img{width:170px;height:170px}.sdet p{font-size:.85rem;margin-top:4px}.dcount{font-size:1.8rem!important;font-weight:800;margin-top:8px!important}
+@media(max-width:760px){.swrap{grid-template-columns:1fr}.sdet{position:static;order:-1}}
+.lbl{font-size:.7rem;font-weight:700;color:#95A5A6;letter-spacing:.1em;margin-top:12px}
+@media(max-width:760px){.jeu{grid-template-columns:1fr}.side{position:static;height:300px;order:2}.sta{grid-template-columns:1fr}}
+/* succès / stats */
+.page{background:var(--dark);min-height:100vh;padding:20px 14px 40px;text-align:center}.page h1{font-size:clamp(2rem,8vw,3rem);color:#fff}
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:14px 0}.tabs button{background:var(--card);color:var(--txt)}.tabs button.act{background:var(--blue);color:var(--dark)}
+.pb{width:min(460px,90%);height:8px;background:var(--card);border-radius:4px;margin:8px auto 0}.pb i{display:block;height:100%;background:var(--gold);border-radius:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-width:980px;margin:0 auto;text-align:left}
+.card{display:flex;gap:14px;align-items:center;background:var(--st);border:1px solid var(--card);border-radius:8px;padding:14px}
+.ico{flex:none;width:60px;height:60px;display:grid;place-items:center;background:var(--card);color:var(--lock);font:800 1.5rem Arial;border-radius:6px}
+.card h4{color:var(--lock);font-size:1rem}.card p{font-size:.8rem;margin:3px 0 5px}.card small{font-weight:700;color:var(--lock)}
+.card.got{border-color:var(--gold)}.got .ico{background:var(--st);color:var(--gold)}.got h4{color:var(--gold)}.got small{color:var(--green)}
+.card.ult.got{background:#2d1f3d}.ult.got h4,.ult.got small{color:#ff69b4}.card.meta.got{background:#1a3a5c;border-color:var(--blue)}.meta.got h4,.meta.got small{color:var(--blue)}
+.rows{max-width:980px;margin:0 auto;text-align:left;display:grid;gap:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--st);border:1px solid var(--card);border-radius:8px;padding:10px 14px}
+.row.full{border:2px solid var(--gold)}.row.gen.full{border-color:var(--pur)}.row h4{color:#fff}.row.full h4{color:var(--gold)}.row.gen.full h4{color:var(--pur)}.row p{font-size:.8rem}.row small{font-weight:700;color:var(--green)}
+.pips{display:flex;gap:6px}.pip{width:42px;height:42px;display:grid;place-items:center;background:var(--card);color:var(--lock);font:800 .8rem Arial;border-radius:5px}.pip.got{background:var(--st);color:var(--gold);border:1px solid var(--gold)}.gen .pip.got{color:var(--pur);border-color:var(--pur)}.pip.ult{color:#ff69b4!important;border-color:#ff69b4!important}
+.tile{display:flex;gap:14px;align-items:center;background:var(--st);border:1px solid var(--card);border-radius:8px;padding:14px}.tile .e{font-size:2rem}.tile h4{font-size:1.4rem}.tile p{font-size:.8rem}
+.tbl{max-width:560px;margin:0 auto;background:var(--st);border-radius:8px;padding:10px 16px;text-align:left;font:.95rem Consolas,monospace}.tbl div{display:flex;justify-content:space-between;padding:2px 0}
+.back{margin-top:24px;background:var(--card);padding:.7em 2.4em}
+/* fenêtres */
+#mdl{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;z-index:40;padding:14px}
+#mdl .box{background:var(--dark);border:2px solid var(--card);border-radius:12px;padding:18px;max-width:580px;width:100%;max-height:90vh;overflow:auto;text-align:center}
+.box h2{margin-bottom:6px;color:#fff}.box h4{margin:12px 0 2px;color:var(--blue);font-size:.9rem;letter-spacing:.08em;text-transform:uppercase}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:8px 0}
+.chip{background:var(--card);padding:.5em .95em;border-radius:20px;border:2px solid transparent;font-size:.9rem;color:#fff;text-shadow:0 1px 2px #0008}.chip.act{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,215,0,.3);transform:scale(1.06)}
+.gear{position:fixed;top:12px;right:12px;font-size:1.4rem;width:46px;height:46px;padding:0;border-radius:50%;background:var(--card);z-index:10}
+.defbtn{background:linear-gradient(90deg,#8e44ad,#c0392b);font-size:1.05rem;box-shadow:0 4px 0 #4a1f5a}
+/* animations */
+@keyframes pop{0%{transform:scale(.3) rotate(-8deg);opacity:0}60%{transform:scale(1.15)}100%{transform:none;opacity:1}}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes fly{to{transform:translate(var(--x),var(--y)) scale(0);opacity:0}}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@keyframes shine{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes flash{from{background:#ffd700}}
+.pop{animation:pop .45s cubic-bezier(.3,1.5,.5,1)}.shake{animation:shake .3s}.lst .new{animation:flash 1s}
+.spr{position:relative}.pt{position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;pointer-events:none;animation:fly .7s ease-out forwards}
+.cf{position:fixed;top:-20px;width:9px;height:14px;z-index:60;pointer-events:none;animation:fall 2.2s linear forwards}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+/* toasts */
+#toasts{position:fixed;right:16px;bottom:16px;z-index:50}
+.toast{background-image:linear-gradient(110deg,transparent 30%,rgba(255,215,0,.28) 50%,transparent 70%);background-size:200% 100%;display:flex;gap:12px;align-items:center;width:min(350px,92vw);background:var(--st);border:2px solid var(--gold);border-radius:8px;padding:10px 14px;animation:in .3s,shine 1.3s .3s;transition:opacity .4s}.toast.out{opacity:0}
+.toast .ic{font:800 1.6rem Arial;color:var(--gold);min-width:46px;text-align:center}.toast h4{color:var(--gold)}.toast p{font-size:.8rem}
+@keyframes in{from{transform:translateX(40px);opacity:0}}
+</style>
+</head>
+<body>
+<div id="app"></div><div id="toasts"></div>
+<script>
+const TOTAL=1025,DUREE=3600,dur=g=>g.duree||DUREE,API='https://tyradex.app/api/v1';
+const SPR=n=>`https://raw.githubusercontent.com/Yarkis01/TyraDex/images/sprites/${n}/regular.png`;
+const SPR2=n=>`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n}.png`;
+const TYPES=["Normal","Feu","Eau","Plante","Électrik","Glace","Combat","Poison","Sol","Vol","Psy","Insecte","Roche","Spectre","Dragon","Acier","Ténèbres","Fée"];
+const GENS=[[1,"Kanto",1,151],[2,"Johto",152,251],[3,"Hoenn",252,386],[4,"Sinnoh",387,493],[5,"Unys",494,649],[6,"Kalos",650,721],[7,"Alola",722,809],[8,"Galar",810,905],[9,"Paldea",906,1025]];
+const SEUILS=[25,50,75,100],STATS=[["hp","PV","#e74c3c"],["atk","ATQ","#e67e22"],["def","DÉF","#3498db"],["spe_atk","ATQ SPÉ","#9b59b6"],["spe_def","DÉF SPÉ","#16a085"],["vit","VIT","#f39c12"]];
+const $=s=>document.querySelector(s),pad=n=>String(n).padStart(3,'0');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(),loose=s=>norm(s).replace(/[^a-z0-9]/g,'');
+const gen=n=>(GENS.find(g=>n>=g[2]&&n<=g[3])||[])[0];
+const K={data:'pokedex.data.v1',badges:'pokedex.badges',stats:'pokedex.stats',opts:'pokedex.opts',game:'pokedex.game'};
+const load=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}};
+const save=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){console.warn(e)}};
+const S={badges:new Set(load(K.badges,[])),stats:{parties:0,total:0,record:0,temps:0,uniques:[],type:{},gen:{},poke:{},...load(K.stats,{})},opts:{challenge:true,son:true,...load(K.opts,{})},game:load(K.game,null)};
+const sg=()=>save(K.game,S.game),sb=()=>save(K.badges,[...S.badges]),ss=()=>save(K.stats,S.stats),so=()=>save(K.opts,S.opts);
+const IMG=new Map();
+function img(n){let i=IMG.get(n);if(!i){i=new Image();i.alt=P[n].fr;i.onerror=()=>{i.onerror=null;i.src=SPR2(n)};i.src=SPR(n);IMG.set(n,i)}return i}
+function precharger(){const q=Object.keys(P).map(Number);let k=0;
+  const w=()=>{if(k>=q.length)return;const i=img(q[k++]);(i.complete?Promise.resolve():new Promise(r=>{i.onload=r;i.addEventListener('error',r)})).then(()=>i.decode().catch(()=>{})).then(w)};
+  for(let c=0;c<4;c++)w()}
+S.opts.min??=S.opts.challenge===false?0:60;
+S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?'en':'fr';document.documentElement.lang=S.opts.lang;
+const tr=(fr,en)=>S.opts.lang=='en'?en:fr,pn=n=>P[n][S.opts.lang=='en'?'en':'fr'];
+const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'Electric',Glace:'Ice',Combat:'Fighting',Poison:'Poison',Sol:'Ground',Vol:'Flying',Psy:'Psychic',Insecte:'Bug',Roche:'Rock',Spectre:'Ghost',Dragon:'Dragon',Acier:'Steel','Ténèbres':'Dark','Fée':'Fairy'};
+const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
+const TC={Normal:'#A8A878',Feu:'#F08030',Eau:'#6890F0',Plante:'#78C850','Électrik':'#E0B800',Glace:'#6CC8C8',Combat:'#C03028',Poison:'#A040A0',Sol:'#C8A040',Vol:'#8F78E8',Psy:'#F85888',Insecte:'#A8B820',Roche:'#B8A038',Spectre:'#705898',Dragon:'#7038F8',Acier:'#9898B8','Ténèbres':'#705848','Fée':'#E080A0'};
+const DFI=+((location.hash.match(/defi=(\d+)/)||[])[1]||0);
+const arr=x=>x==null||x===''?[]:Array.isArray(x)?x:[x];
+const nc=c=>!c?{t:[],g:[]}:c.k?(c.k=='t'?{t:[c.v],g:[]}:{t:[],g:[c.v]}):{t:arr(c.t),g:arr(c.g).map(Number)}; // accepte les anciens formats
+const cibleDe=s=>{const o={t:[],g:[]};String(s||'').split('|').forEach(p=>{if(p.startsWith('t:'))o.t=p.slice(2).split(',').filter(Boolean);else if(p.startsWith('g:'))o.g=p.slice(2).split(',').filter(Boolean).map(Number)});return o.t.length||o.g.length?o:null};
+const cibleStr=c=>[c.t.length?'t:'+c.t.join(','):'',c.g.length?'g:'+c.g.join(','):''].filter(Boolean).join('|');
+const labelCible=c=>{c=nc(c);return[c.t.length?`${tr('type','type')}${c.t.length>1?'s':''} ${c.t.map(tname).join(' / ')}`:'',c.g.length?`${tr('génération','generation')}${c.g.length>1?'s':''} ${c.g.length>1?[...c.g].sort((a,b)=>a-b).join(', '):`${c.g[0]} (${gname(c.g[0])})`}`:''].filter(Boolean).join(' · ')};
+const cibleIds=g=>{const c=nc(g.cible);return Object.keys(P).map(Number).filter(n=>(!c.t.length||(P[n].t||[]).some(x=>c.t.includes(x)))&&(!c.g.length||c.g.includes(gen(n))))};
+let P={},EX={},LO={},TT={},GT={},tm;
+
+/* ── Sons et effets ── */
+let AC;
+function bip(f,d,t=0,ty='sine',v=.15){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume();
+  const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+t;o.type=ty;o.frequency.setValueAtTime(f,s);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d)}catch{}}
+function son(k){if(!S.opts.son)return;
+  if(k=='cap'){bip(660,.12,0,'square',.07);bip(990,.2,.09,'square',.07)}
+  else if(k=='succes')[523,659,784,1047,1319].forEach((f,i)=>bip(f,.3,.3+i*.1,'triangle',.18));
+  else if(k=='dup')bip(330,.14,0,'sine',.12);
+  else if(k=='err')bip(140,.22,0,'sawtooth',.07)}
+const COL=['#ffd700','#ff6b6b','#66c0f4','#a4d007','#ffffff'];
+function anim(el,c){if(!el)return;el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),1000)}
+function etincelles(){const s=$('#spr');if(!s)return;for(let i=0;i<16;i++){const p=document.createElement('i'),a=Math.PI*2*i/16,d=90+Math.random()*80;p.className='pt';p.style.cssText=`--x:${Math.cos(a)*d}px;--y:${Math.sin(a)*d}px;background:${COL[i%5]}`;s.append(p);setTimeout(()=>p.remove(),800)}}
+function confettis(){for(let i=0;i<50;i++){const e=document.createElement('i');e.className='cf';e.style.cssText=`left:${Math.random()*100}vw;background:${COL[i%5]};animation-delay:${Math.random()*.6}s;animation-duration:${1.8+Math.random()*1.2}s`;document.body.append(e);setTimeout(()=>e.remove(),3500)}}
+
+/* ── Badges ── */
+const BADGES=(()=>{const b=[];
+[['premier_pas','Premier Pas','Attrape ton 1er Pokémon','First Steps','Catch your 1st Pokémon','1',1],['debutant','Apprenti','Attrape 10 % des Pokémon (102)','Apprentice','Catch 10% of all Pokémon (102)','10',102],['collectionneur','Collectionneur','Attrape 25 % des Pokémon (256)','Collector','Catch 25% of all Pokémon (256)','25',256],['expert','Expert','Attrape 50 % des Pokémon (512)','Expert','Catch 50% of all Pokémon (512)','50',512],['maitre','Maître Dresseur','Attrape 75 % des Pokémon (768)','Pokémon Master','Catch 75% of all Pokémon (768)','75',768],['legende','Légende Vivante','Attrape 100 % des Pokémon (1025)','Living Legend','Catch 100% of all Pokémon (1025)','100',1025]].forEach(([id,nf,df,ne,de,ic,s])=>b.push({id,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic,s,k:'p'}));
+TYPES.forEach(t=>SEUILS.forEach(s=>b.push({id:`type_${loose(t)}_${s}`,get nom(){return s==100?tr(`Grand Maître ${t}`,`${tname(t)} Grand Master`):tr(`Maître ${t} ${s} %`,`${tname(t)} Master ${s}%`)},get desc(){return s==100?tr(`Trouver tous les Pokémon de type ${t}`,`Find every ${tname(t)}-type Pokémon`):tr(`Attrape ${s} % des Pokémon de type ${t}`,`Catch ${s}% of ${tname(t)}-type Pokémon`)},ic:s==100?'GM':''+s,s,k:'t',t,u:s==100})));
+GENS.forEach(([g,n,d,f])=>SEUILS.forEach(s=>b.push({id:`gen_${g}_${s}`,get nom(){return s==100?tr(`Maître de ${n}`,`Master of ${gname(g)}`):tr(`Explorateur de ${n} ${s} %`,`${gname(g)} Explorer ${s}%`)},get desc(){return tr(`${s==100?'Trouver tous les':`Attrape ${s} % des`} Pokémon de la génération ${g} (${n}, #${d}-${f})`,`${s==100?'Find every':`Catch ${s}% of`} generation ${g} Pokémon (${gname(g)}, #${d}-${f})`)},ic:s==100?'GM':''+s,s,k:'g',g,u:s==100})));
+[[25,'Chasseur de Succès','Achievement Hunter'],[50,'Collectionneur de Succès','Achievement Collector'],[75,'Expert des Succès','Achievement Expert'],[100,'Légende des Succès','Achievement Legend']].forEach(([s,nf,ne])=>b.push({id:'meta_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Obtenir ${s} % des succès`,`Obtain ${s}% of achievements`)},ic:''+s,s,k:'m'}));
+return b})();
+
+function verifier(){
+  const ids=S.game.ids,tc={},gc={},nv=[];
+  ids.forEach(i=>{(P[i].t||[]).forEach(t=>tc[t]=(tc[t]||0)+1);const g=gen(i);gc[g]=(gc[g]||0)+1});
+  for(const b of BADGES){if(b.k=='m'||S.badges.has(b.id))continue;
+    const ok=b.k=='t'?TT[b.t]&&100*(tc[b.t]||0)/TT[b.t]>=b.s:b.k=='g'?GT[b.g]&&100*(gc[b.g]||0)/GT[b.g]>=b.s:ids.length>=b.s;
+    if(ok){S.badges.add(b.id);nv.push(b)}}
+  const base=BADGES.filter(b=>b.k!='m'),p=100*base.filter(b=>S.badges.has(b.id)).length/base.length;
+  BADGES.filter(b=>b.k=='m'&&!S.badges.has(b.id)&&p>=b.s).forEach(b=>{S.badges.add(b.id);nv.push(b)});
+  if(nv.length){sb();son('succes');confettis();nv.forEach(b=>toast(tr('Succès débloqué : ','Achievement unlocked: ')+b.nom,b.desc,b.ic))}
+}
+const Q=[];let busy=0;
+function toast(t,d,i){Q.push([t,d,i]);if(!busy)nextToast()}
+function nextToast(){const x=Q.shift();if(!x){busy=0;return}busy=1;const e=document.createElement('div');e.className='toast';e.innerHTML=`<b class=ic>${esc(x[2])}</b><div><h4>${esc(x[0])}</h4><p>${esc(x[1])}</p></div>`;$('#toasts').append(e);setTimeout(()=>e.classList.add('out'),4000);setTimeout(()=>{e.remove();setTimeout(nextToast,300)},4400)}
+
+/* ── Données (TyraDex) mises en cache dans le navigateur ── */
+async function chargerDonnees(prog){
+  const c=load(K.data,null);
+  if(c&&Object.keys(c).length>=TOTAL){P=c;return}
+  const d={},add=j=>{if(j&&j.pokedex_id>=1&&j.pokedex_id<=TOTAL&&j.name&&j.name.fr&&j.name.en)d[j.pokedex_id]={fr:j.name.fr,en:j.name.en,t:(j.types||[]).map(t=>t.name),s:j.stats||{},a:(j.talents||[]).map(t=>({n:t.name,c:!!t.tc}))}};
+  prog(5,tr('Téléchargement du Pokédex...','Downloading the Pokédex...'));
+  try{const r=await fetch(API+'/pokemon');if(r.ok)(await r.json()).forEach(add)}catch{}
+  const manq=[];for(let i=1;i<=TOTAL;i++)if(!d[i])manq.push(i);
+  if(manq.length){const tot=manq.length;let fait=0;
+    await Promise.all(Array.from({length:10},async()=>{while(manq.length){const n=manq.pop();try{const r=await fetch(`${API}/pokemon/${n}`);if(r.ok)add(await r.json())}catch{}fait++;prog(5+90*fait/tot,`${tr('Données','Data')} : ${fait}/${tot}`)}}))}
+  if(!Object.keys(d).length)throw new Error(tr('TyraDex est injoignable (vérifie ta connexion)','TyraDex is unreachable (check your connection)'));
+  P=d;if(Object.keys(d).length>=TOTAL)save(K.data,d);
+}
+const FIX_TYPES={893:['Ténèbres','Plante']}; // corrections manuelles si l'API se trompe
+function indexer(){
+  for(const k in P){P[k].t=(P[k].t||[]).map(x=>TYPES.find(y=>norm(y)==norm(x))||x);if(FIX_TYPES[k])P[k].t=FIX_TYPES[k]}
+  EX={};LO={};TT={};GT={};
+  for(const [k,p] of Object.entries(P)){const id=+k;
+    [p.fr,p.en].forEach(n=>{EX[norm(n)]=id;(LO[loose(n)]??=new Set()).add(id)});
+    (p.t||[]).forEach(t=>TT[t]=(TT[t]||0)+1);GT[gen(id)]=(GT[gen(id)]||0)+1}
+}
+function rechercher(t){const e=EX[norm(t)];if(e)return[e];const l=loose(t);return l&&LO[l]?[...LO[l]].sort((a,b)=>a-b):[]} // "nidoran" -> ♀ et ♂
+
+/* ── Parties ── */
+function finirPartie(live){
+  const g=S.game;if(!g)return;
+  const end=live&&!g.fin?Date.now():g.vu;let d=Math.max(0,(end-g.debut)/1000);if(g.mode=='c')d=Math.min(d,dur(g));
+  const s=S.stats,u=new Set(s.uniques);
+  s.parties++;s.temps+=d;s.total+=g.ids.length;s.record=Math.max(s.record,g.ids.length);
+  g.ids.forEach(n=>{u.add(n);s.poke[n]=(s.poke[n]||0)+1;(P[n].t||[]).forEach(t=>s.type[t]=(s.type[t]||0)+1);const x=gen(n);s.gen[x]=(s.gen[x]||0)+1});
+  s.uniques=[...u];(s.hist=s.hist||[]).push({d:Date.now(),n:g.ids.length,t:Math.round(d),m:g.mode=='c'?dur(g)/60:0,c:g.cible?labelCible(g.cible):'',i:g.indices||0});s.hist=s.hist.slice(-30);ss();S.game=null;sg();
+}
+const fmt=r=>{const h=Math.floor(r/3600),m=Math.floor(r%3600/60),s=r%60,z=n=>String(n).padStart(2,'0');return h?`${h}h ${z(m)}min`:m?`${m}min ${z(s)}s`:`${s}s`};
+const hms=r=>{const h=Math.floor(r/3600),m=Math.floor(r%3600/60),s=r%60,z=n=>String(n).padStart(2,'0');return h?`${z(h)}:${z(m)}:${z(s)}`:`${z(m)}:${z(s)}`};
+const vue=h=>{clearInterval(tm);$('#app').innerHTML=h;scrollTo(0,0)};
+
+/* ── Écrans ── */
+let pret=false,ld={p:0,m:'',err:0},RV=()=>menu();
+const TIT={time:['TEMPS ÉCOULÉ !',"TIME'S UP!"],quit:['Partie abandonnée !','Game abandoned!'],end:['Partie terminée !','Game over!']};
+const defLabel=()=>{const c=cibleDe(S.opts.cible);return `🎯 ${tr('DÉFIS','CHALLENGES')} — ${S.opts.min?S.opts.min+' min':tr('Libre','Free')} · ${c?labelCible(c):tr('Tous les Pokémon','All Pokémon')}`};
+function closeModal(){const m=$('#mdl');if(m)m.remove()}
+function modal(html,after){closeModal();const m=document.createElement('div');m.id='mdl';m.innerHTML=`<div class=box>${html}<button id=mx class=back style="margin-top:14px">${tr('Fermer','Close')}</button></div>`;document.body.append(m);
+  m.onclick=e=>{if(e.target==m||e.target.id=='mx')closeModal()};if(after)after()}
+function defis(){
+  const c=cibleDe(S.opts.cible)||{t:[],g:[]},m=S.opts.min,sc=($('#mdl .box')||{}).scrollTop||0,n=pret?cibleIds({cible:c}).length:null;
+  modal(`<h2>🎯 ${tr('Défis','Challenges')}</h2>
+  <h4>${tr('Durée','Duration')}</h4><div class=chips>${[15,30,60,0].map(x=>`<button class="chip ${m==x?'act':''}" data-m=${x}>${x?'🕒 '+x+' min':tr('♾️ Libre','♾️ Free')}</button>`).join('')}</div>
+  <h4>${tr('Types','Types')} ${c.t.length?`(${c.t.length})`:''}</h4><div class=chips>${TYPES.map(x=>`<button class="chip ${c.t.includes(x)?'act':''}" data-t="${x}" style="background:${TC[x]}">${tname(x)}</button>`).join('')}</div>
+  <h4>${tr('Générations','Generations')} ${c.g.length?`(${c.g.length})`:''}</h4><div class=chips>${GENS.map(g=>`<button class="chip ${c.g.includes(g[0])?'act':''}" data-g=${g[0]}>${tr('Gén.','Gen.')} ${g[0]} · ${gname(g[0])}</button>`).join('')}</div>
+  <p class=gold style="${n===0?'color:#e74c3c':''}">${n===null?'':n===0?tr('Aucun Pokémon ne correspond : change de type ou de génération','No Pokémon match: change the types or generations'):`🎯 ${n} Pokémon ${tr('dans ce défi','in this challenge')}`}</p>
+  <p class=small style="margin:2px 0">${tr("Tu peux en choisir plusieurs. Un Pokémon compte s'il est de l'une des générations choisies ET d'un des types choisis. Clique à nouveau pour retirer un choix.",'Pick as many as you like. A Pokémon counts if it is from any chosen generation AND has any chosen type. Click again to remove a choice.')}</p>
+  <div class=chips><button class=chip data-r=1>↺ ${tr('Tous les Pokémon','All Pokémon')}</button></div>`,
+  ()=>{const cur=()=>cibleDe(S.opts.cible)||{t:[],g:[]},tog=(a,v)=>a.includes(v)?a.filter(x=>x!==v):[...a,v],
+      maj=f=>{f();so();const d=$('#df');if(d)d.textContent=defLabel();defis()};
+    document.querySelectorAll('#mdl [data-m]').forEach(b=>b.onclick=()=>maj(()=>{S.opts.min=+b.dataset.m}));
+    document.querySelectorAll('#mdl [data-t]').forEach(b=>b.onclick=()=>maj(()=>{const x=cur();x.t=tog(x.t,b.dataset.t);S.opts.cible=cibleStr(x)}));
+    document.querySelectorAll('#mdl [data-g]').forEach(b=>b.onclick=()=>maj(()=>{const x=cur();x.g=tog(x.g,+b.dataset.g);S.opts.cible=cibleStr(x)}));
+    $('#mdl [data-r]').onclick=()=>maj(()=>{S.opts.cible=''});
+    $('#mdl .box').scrollTop=sc})
+}
+function reglages(){
+  const en=S.opts.lang=='en';
+  modal(`<h2>⚙️ ${tr('Paramètres','Settings')}</h2>
+  <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>🇫🇷 Français</button><button class="chip ${en?'act':''}" data-l=en>🇬🇧 English</button></div>
+  <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>`,
+  ()=>{document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{S.opts.lang=b.dataset.l;so();document.documentElement.lang=S.opts.lang;RV();reglages()});
+    document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()})})
+}
+async function demarrer(){
+  ld={p:0,m:tr('Chargement du Pokédex...','Loading the Pokédex...'),err:0};majLd();
+  try{await chargerDonnees((p,m)=>{ld.p=p;ld.m=m;majLd()});indexer();pret=true;majLd();precharger()}
+  catch(e){ld.err=1;ld.m=tr('Erreur : ','Error: ')+e.message;majLd()}
+}
+function majLd(){
+  if(pret&&$('#wait')){stats('c');return}const e=$('#ld');if(!e)return;
+  const b=$('#st');if(b)b.disabled=!pret;
+  if(pret){e.remove();return}
+  e.innerHTML=ld.err?`${esc(ld.m)} <button id=re>${tr('Réessayer','Retry')}</button>`:`⏳ ${esc(ld.m)} ${Math.round(ld.p)} %`;
+  if(ld.err)$('#re').onclick=demarrer;
+}
+function menu(){
+  RV=menu;
+  vue(`<button id=rg class=gear title="${tr('Paramètres','Settings')}">⚙️</button><div class="c menu"><h1 class=logo>POKÉDEX</h1><p class=sub>${tr('Attrape-les tous !',"Gotta catch 'em all!")}</p>
+  <p class=gold>🏆 ${S.badges.size}/${BADGES.length} ${tr('succès obtenus','achievements unlocked')}</p>${DFI?`<p class=gold>⚔️ ${tr(`Un ami a trouvé ${DFI} Pokémon : saurais-tu faire mieux ?`,`A friend found ${DFI} Pokémon: can you beat that?`)}</p>`:''}<p id=ld class=small></p>
+  <button id=df class=defbtn>${defLabel()}</button>
+  <button id=st class=big>START</button>
+  <button id=su class=steam>🏆 ${tr('SUCCÈS','ACHIEVEMENTS')}</button><button id=sa class="steam vert">📊 ${tr('STATISTIQUES','STATISTICS')}</button>
+  <p class=small><button id=ex>⬇ ${tr('Exporter ma sauvegarde','Export my save')}</button><button id=im>⬆ ${tr('Importer','Import')}</button><button id=rz>🗑 ${tr('Tout effacer','Erase everything')}</button></p><input type=file id=fi accept=.json hidden>
+  <p class=small>${tr('Ta progression est sauvegardée dans ce navigateur. Données : TyraDex · Projet de fan non officiel, Pokémon © Nintendo / Game Freak.','Your progress is saved in this browser. Data: TyraDex · Unofficial fan project, Pokémon © Nintendo / Game Freak.')}</p></div>`);
+  $('#rg').onclick=reglages;$('#df').onclick=defis;majLd();
+  $('#st').onclick=()=>{const c=cibleDe(S.opts.cible);if(c&&!cibleIds({cible:c}).length){defis();return}finirPartie(false);jeu()};
+  $('#su').onclick=()=>succes();$('#sa').onclick=()=>stats();
+  $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
+  $('#im').onclick=()=>$('#fi').click();
+  $('#fi').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());
+    if(Array.isArray(j.badges))S.badges=new Set(j.badges.map(String));
+    if(j.stats&&typeof j.stats=='object')Object.assign(S.stats,j.stats);
+    if(j.opts&&typeof j.opts=='object')Object.assign(S.opts,j.opts);
+    S.game=j.game&&Array.isArray(j.game.ids)?j.game:null;sb();ss();so();sg();menu()}catch{alert(tr('Fichier de sauvegarde invalide.','Invalid save file.'))}};
+  let tz;$('#rz').onclick=()=>{const b=$('#rz');
+    if(b.dataset.ok){clearTimeout(tz);[K.badges,K.stats,K.opts,K.game].forEach(k=>save(k,null));location.reload();return}
+    b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase');b.style.background='#c0392b';
+    tz=setTimeout(()=>{delete b.dataset.ok;b.textContent='🗑 '+tr('Tout effacer','Erase everything');b.style.background=''},4000)};
+}
+function jeu(){
+  if(!S.game){S.game={debut:Date.now(),vu:Date.now(),mode:S.opts.min>0?'c':'l',duree:S.opts.min*60,cible:cibleDe(S.opts.cible),indices:0,ids:[],fin:false};sg()}
+  const g=S.game;RV=jeu;
+  vue(`<header class=top><b>POKÉDEX</b><span><button id=rg>⚙️</button><button id=fs>🖥️ ${tr('Plein écran','Fullscreen')}</button><button id=mn hidden>← MENU</button></span></header>
+  <main class=jeu><aside class=side><h3>${tr('MES POKÉMON','MY POKÉMON')}</h3><div id=lst class=lst></div><p id=cpt class=gold></p><p id=tmr class=tmr></p><button id=hint>💡 ${tr('Indice','Hint')}</button> <button id=arr class=stop>🏳️ ${tr('Abandonner','Give up')}</button></aside>
+  <section class=det><p id=fb class=fb>${tr('Bienvenue ! Recherche un Pokémon...','Welcome! Search for a Pokémon...')}</p><div class=srch><input id=q placeholder="${tr('Nom en français ou en anglais','Name in French or English')}" autocomplete=off autocapitalize=off spellcheck=false><button id=go>${tr('Rechercher','Search')}</button></div>
+  <div id=num class=num></div><div id=nom class=nom></div><div id=spr class=spr></div><div id=sta></div></section></main>`);
+  $('#rg').onclick=reglages;
+  $('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
+  $('#mn').onclick=()=>{finirPartie(true);menu()};
+  $('#go').onclick=chercher;$('#q').oninput=e=>rechercher(e.target.value).forEach(img);$('#q').onkeydown=e=>{if(e.key=='Enter')chercher()};
+  const l=$('#lst');l.onclick=l.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)montrer([+r.dataset.n],g.fin)};
+  let ta;$('#arr').onclick=()=>{const b=$('#arr');
+    if(b.dataset.ok){clearTimeout(ta);terminer('quit');return}
+    b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'abandon",'⚠️ Confirm give up');b.style.background='#e67e22';
+    ta=setTimeout(()=>{delete b.dataset.ok;b.textContent='🏳️ '+tr('Abandonner','Give up');b.style.background=''},4000)};
+  $('#hint').onclick=()=>{if(g.fin)return;const m=cibleIds(g).filter(n=>!g.ids.includes(n));if(!m.length)return;const n=m[Math.floor(Math.random()*m.length)],x=pn(n),k=(g.indices=(g.indices||0)+1),s=k>1?'s':'';sg();
+    fb(`💡 ${tr('Indice','Hint')} : type ${(P[n].t||[]).map(tname).join(' / ')}, ${x.length} ${tr('lettres','letters')}, ${tr('commence par','starts with')} « ${x[0]} » — ${tr(`${k} indice${s} utilisé${s}`,`${k} hint${s} used`)}`,'#2980b9')};
+  liste();if(g.cible)fb('🎯 '+tr('Défi : ','Challenge: ')+labelCible(g.cible),'#7F8C8D');
+  if(g.fin){fin(g.titre||'end');return}
+  if(g.mode!='c')$('#tmr').hidden=true;
+  let n=0;const tick=()=>{if(g.mode=='c'){const r=Math.max(0,Math.ceil((g.debut+dur(g)*1000-Date.now())/1000));$('#tmr').textContent=tr('Reste : ','Time left: ')+hms(r);if(!r){terminer('time');return}}
+    if(++n%20==0){g.vu=Date.now();sg()}};
+  tick();if(!g.fin){tm=setInterval(tick,500);$('#q').focus()}
+}
+function fb(t,c){const f=$('#fb');f.textContent=t;f.style.color=c}
+function liste(){const g=S.game;$('#lst').innerHTML=[...g.ids].sort((a,b)=>a-b).map(n=>`<div data-n=${n}>#${pad(n)} - ${esc(pn(n))}</div>`).join('');$('#cpt').textContent=`${tr('Trouvés','Found')} : ${g.ids.length}/${cibleIds(g).length}`}
+const phon=s=>loose(s).replace(/ph/g,'f').replace(/qu|k/g,'c').replace(/tch/g,'ch').replace(/y/g,'i').replace(/w/g,'v').replace(/h/g,'').replace(/(.)\1+/g,'$1');
+function dl(a,b){ // distance de Damerau-Levenshtein : une lettre inversée = 1 erreur
+  const n=b.length;let pp=null,p=Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){const c=[i];for(let j=1;j<=n;j++){let v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]==b[j-1]?0:1));
+    if(pp&&i>1&&j>1&&a[i-1]==b[j-2]&&a[i-2]==b[j-1])v=Math.min(v,pp[j-2]+1);c[j]=v}pp=p;p=c}
+  return p[n]}
+function suggerer(t){
+  const x=loose(t),xp=phon(t);if(x.length<3)return[];
+  const g=S.game,ci=g&&g.cible?new Set(cibleIds(g)):null,lg=S.opts.lang=='en'?'en':'fr',ok=x.length<5?1:x.length<8?2:3,res=[];
+  for(const k in P){const id=+k;if(ci&&!ci.has(id))continue;let best=9,nom='';
+    for(const l of['fr','en']){const y=loose(P[k][l]);if(!y||(Math.abs(y.length-x.length)>ok+3&&!y.startsWith(x)))continue;
+      let s=Math.min(dl(x,y),dl(xp,phon(P[k][l]))+.4);
+      if(y.startsWith(x)&&y.length>x.length)s=Math.min(s,.5+(y.length-x.length)*.05); // nom tapé en partie
+      if(l!=lg)s+=.1;if(s<best){best=s;nom=P[k][l]}}
+    if(best<=ok&&best/x.length<=.34)res.push({id,nom,got:!!(g&&g.ids.includes(id)),rank:best+(g&&g.ids.includes(id)?1.5:0)})}
+  res.sort((a,b)=>a.rank-b.rank||a.id-b.id);
+  return res.filter(r=>r.rank<=res[0].rank+.6).slice(0,3)} // seulement les plus proches du meilleur
+function chercher(){
+  const g=S.game;if(g.fin)return;const i=$('#q'),t=i.value.trim();if(!t)return;i.value='';
+  let ns=rechercher(t);if(!ns.length){fb(tr(`« ${t} » introuvable`,`"${t}" not found`),'#e53935');son('err');anim(i,'shake');const s=suggerer(t);
+    if(s.length){const f=$('#fb');f.append(tr(' — tu voulais dire ',' — did you mean '));s.forEach(r=>{const b=document.createElement('button');b.className='sug';b.textContent=(r.got?'✓ ':'')+r.nom;b.onclick=()=>{$('#q').value=r.nom;chercher()};f.append(b)});f.append(' ?')}
+    return}
+  if(g.cible){const ci=new Set(cibleIds(g)),ok=ns.filter(n=>ci.has(n));if(!ok.length){fb(tr(`${pn(ns[0])} ne fait pas partie du défi (${labelCible(g.cible)})`,`${pn(ns[0])} is not part of the challenge (${labelCible(g.cible)})`),'#ff8800');son('err');anim(i,'shake');return}ns=ok}
+  const nv=ns.filter(n=>!g.ids.includes(n));
+  if(nv.length){g.ids.push(...nv);g.vu=Date.now();sg();verifier()}
+  const noms=ns.map(pn).join(tr(' et ',' and '));
+  fb(nv.length?tr(`${noms} ${ns.length>1?'ajoutés':'ajouté'} !`,`${noms} added!`):tr(`${noms} déjà dans la collection`,`${noms} already in your collection`),nv.length?'#2e9e4f':'#ff8800');
+  montrer(ns);liste();
+  if(nv.length){son('cap');etincelles();$('#spr').querySelectorAll('img').forEach(x=>anim(x,'pop'));anim($(`#lst [data-n="${nv[0]}"]`),'new')}
+  else{son('dup');$('#spr').querySelectorAll('img').forEach(x=>anim(x,'shake'))}
+}
+function montrer(ids,statut){
+  $('#num').textContent=ids.map(n=>'#'+pad(n)).join(' / ');$('#nom').textContent=ids.map(pn).join(' / ');
+  $('#spr').replaceChildren(...ids.map(n=>{const i=img(n);i.className=ids.length>1?'duo':'';return i}));
+  $('#sta').innerHTML=ids.length==1?fiche(P[ids[0]]):'';
+  if(statut){const ok=S.game.ids.includes(ids[0]);fb(`${pn(ids[0])} ${ok?tr('trouvé !','found!'):tr('non trouvé !','not found!')}`,ok?'#2e9e4f':'#c0392b')}
+}
+const STEN={hp:'HP',atk:'ATK',def:'DEF',spe_atk:'SP.ATK',spe_def:'SP.DEF',vit:'SPD'};
+function fiche(p){
+  const s=p.s||{};let h=`<div class=lbl>${tr('STATISTIQUES','STATS')}</div><div class=sta>${STATS.map(([k,a,c])=>{const v=s[k]||0;return`<div class=sr><span>${tr(a,STEN[k])}</span><em><i style="width:${Math.min(100,v/180*100)}%;background:${c}"></i></em><b>${v}</b></div>`}).join('')}</div>`;
+  if(p.a&&p.a.length)h+=`<div class=lbl>${tr('TALENTS','ABILITIES')}</div><div class=tal>${p.a.map(t=>`<span class="${t.c?'tc':''}">${t.c?'★ ':''}${esc(t.n)}</span>`).join('')}</div>`;
+  return h;
+}
+function terminer(k){const g=S.game;g.fin=true;g.titre=k;g.vu=g.mode=='c'?Math.min(Date.now(),g.debut+dur(g)*1000):Date.now();sg();fin(k)}
+function fin(k){
+  clearInterval(tm);const g=S.game,f=new Set(g.ids),L=cibleIds(g),T=TIT[k],titre=T?tr(T[0],T[1]):k;
+  $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=$('#hint').hidden=true;
+  $('#lst').innerHTML=L.map(n=>`<div data-n=${n} class=${f.has(n)?'ok':'ko'}>#${pad(n)} - ${esc(pn(n))}</div>`).join('');
+  const t=Math.round((g.vu-g.debut)/1000);
+  fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
+  if(!$('#shr')){const b=document.createElement('button');b.id='shr';b.textContent=tr('📤 Partager mon score','📤 Share my score');b.style.marginTop='8px';
+    b.onclick=async()=>{const lien=location.href.split('#')[0]+'#defi='+f.size,c=g.cible?' ('+labelCible(g.cible)+')':'',txt=tr(`J'ai trouvé ${f.size}/${L.length} Pokémon${c} en ${fmt(t)} sur le Pokédex ! Saurais-tu faire mieux ? ${lien}`,`I found ${f.size}/${L.length} Pokémon${c} in ${fmt(t)} on the Pokédex! Can you do better? ${lien}`);
+      try{if(navigator.share)await navigator.share({text:txt});else{await navigator.clipboard.writeText(txt);b.textContent=tr('✅ Copié !','✅ Copied!')}}catch{prompt(tr('Copie ce texte :','Copy this text:'),txt)}};
+    document.querySelector('.side').append(b)}
+}
+
+function succes(tab='p'){
+  RV=()=>succes(tab);
+  const ob=b=>S.badges.has(b.id),n=BADGES.filter(ob).length,p=Math.round(100*n/BADGES.length);
+  const cats=[['p','🎯 '+tr('Progression','Progress')],['t','🔥 Types'],['g','🗺️ '+tr('Générations','Generations')],['m','✨ '+tr('Méta','Meta')]];
+  const carte=b=>`<div class="card ${ob(b)?'got':''} ${b.u?'ult':''} ${b.k=='m'?'meta':''}"><div class=ico>${b.ic}</div><div><h4>${esc(b.nom)}</h4><p>${esc(b.desc)}</p><small>${ob(b)?(b.k=='m'?tr('✨ OBTENU','✨ UNLOCKED'):b.u?tr('✨ GRAND MAÎTRE','✨ GRAND MASTER'):tr('DÉBLOQUÉ','UNLOCKED')):tr('VERROUILLÉ','LOCKED')}</small></div></div>`;
+  const rangee=(t,s,bs,c)=>{const k=bs.filter(ob).length;return`<div class="row ${c} ${k==bs.length?'full':''}"><div><h4>${t}${k==bs.length?' ✨':''}</h4><p>${s}</p><small>${k}/${bs.length} ${tr('paliers débloqués','tiers unlocked')}</small></div><div class=pips>${bs.map(b=>`<span class="pip ${ob(b)?'got':''} ${b.u?'ult':''}" title="${esc(b.nom)}">${b.ic}</span>`).join('')}</div></div>`};
+  let body;
+  if(tab=='t')body=`<div class=rows>${TYPES.map(t=>rangee(tname(t),tr(`Pokémon de type ${t}`,`${tname(t)}-type Pokémon`),BADGES.filter(b=>b.t==t),'')).join('')}</div>`;
+  else if(tab=='g')body=`<div class=rows>${GENS.map(([g,nm,d,f])=>rangee(`${tr('Génération','Generation')} ${g} — ${gname(g)}`,`${tr('Pokédex national','National Pokédex')} #${d}-${f}`,BADGES.filter(b=>b.g==g),'gen')).join('')}</div>`;
+  else body=`<div class=grid>${BADGES.filter(b=>b.k==tab).map(carte).join('')}</div>`;
+  vue(`<div class=page><h1>${tr('SUCCÈS','ACHIEVEMENTS')}</h1><p class=gold>🏆 ${n} / ${BADGES.length} ${tr('succès débloqués','achievements unlocked')} (${p} %)</p><div class=pb><i style="width:${p}%"></i></div>
+  <div class=tabs>${cats.map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l} (${BADGES.filter(b=>b.k==k&&ob(b)).length}/${BADGES.filter(b=>b.k==k).length})</button>`).join('')}</div>${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>succes(b.dataset.t));$('#bk').onclick=menu;
+}
+function stats(tab='a'){
+  RV=()=>stats(tab);
+  const s=S.stats,top=o=>Object.entries(o).sort((a,b)=>b[1]-a[1])[0],loc=S.opts.lang=='en'?'en-GB':'fr-FR';
+  const ty=top(s.type),ge=top(s.gen),gl=g=>`${tr('Génération','Generation')} ${g} — ${gname(g)}`,cp=x=>tr(`${x} capture(s)`,`${x} catch(es)`);
+  let body;
+  if(!s.parties)body=`<p style="margin:50px 0">${tr("Aucune partie jouée pour l'instant.<br>Lance une partie depuis le menu pour générer des statistiques !",'No games played yet.<br>Start a game from the menu to generate statistics!')}</p>`;
+  else if(tab=='a'){
+    const T=[['🎮',s.parties,tr('Parties jouées','Games played')],['🏆',`${s.record} / ${TOTAL}`,tr('Record en une partie','Best in one game')],['🔴',`${s.uniques.length} / ${TOTAL}`,tr('Pokémon différents trouvés','Different Pokémon found')],['📦',s.total,tr('Captures au total (parties confondues)','Total catches (all games)')],['⏱️',fmt(s.temps),tr('Temps de jeu total','Total play time')],['✨',`${S.badges.size} / ${BADGES.length}`,tr('Succès débloqués','Achievements unlocked')],['🔥',ty?tname(ty[0]):'—',tr('Type favori','Favorite type')+(ty?` — ${cp(ty[1])}`:'')],['🗺️',ge?gl(ge[0]):'—',tr('Génération favorite','Favorite generation')+(ge?` — ${cp(ge[1])}`:'')]];
+    body=`<div class=grid>${T.map(([e,v,l])=>`<div class=tile><span class=e>${e}</span><div><h4 style="color:var(--gold)">${esc(v)}</h4><p>${l}</p></div></div>`).join('')}</div>`;
+  }else if(tab=='h'){
+    const H=(s.hist||[]).slice().reverse(),mx=Math.max(1,...H.map(x=>x.n));
+    body=`<p class=gold style="margin-bottom:8px">${tr(`Tes ${H.length} dernières parties`,`Your last ${H.length} games`)}</p><div style="display:flex;align-items:flex-end;gap:3px;height:120px;max-width:560px;margin:0 auto 14px">${H.slice().reverse().map(x=>`<i title="${x.n}" style="flex:1;background:var(--gold);border-radius:3px 3px 0 0;height:${Math.max(3,100*x.n/mx)}%"></i>`).join('')}</div>
+    <div class=tbl style="max-width:620px">${H.map(x=>`<div><span>${new Date(x.d).toLocaleDateString(loc)}${x.c?' · '+esc(x.c):''}</span><span>${x.n} · ${fmt(x.t)} · ${x.m?x.m+' min':tr('libre','free')}${x.i?' · 💡'+x.i:''}</span></div>`).join('')||`<p>${tr('Aucune partie enregistrée.','No games recorded.')}</p>`}</div>`;
+  }else if(!pret)body=`<p id=wait style="margin:50px 0">⏳ ${tr("Chargement du Pokédex... la liste s'affichera toute seule.",'Loading the Pokédex... the list will appear by itself.')}</p>`;
+  else{
+    const tot=Object.keys(P).length,nb=Object.keys(P).filter(n=>s.poke[n]).length,pc=Math.round(100*nb/tot),seg=(k,o)=>`<div class=seg>${o.map(([v,l])=>`<button data-seg=${k} data-v=${v} class="${SV[k]==v?'act':''}">${l}</button>`).join('')}</div>`;
+    body=`<p class=gold>${nb} / ${tot} ${tr('Pokémon trouvés','Pokémon found')} (${pc} %)</p><div class=pb><i style="width:${pc}%"></i></div>
+    <div class=sctl style="margin-top:14px"><input id=sq placeholder="🔍 ${tr('Nom ou numéro','Name or number')}" value="${esc(SV.q)}" autocomplete=off>
+    <select id=sg><option value=0>${tr('Toutes les générations','All generations')}</option>${GENS.map(g=>`<option value=${g[0]} ${SV.g==g[0]?'selected':''}>${tr('Gén.','Gen.')} ${g[0]} — ${gname(g[0])}</option>`).join('')}</select>
+    ${seg('f',[['all',tr('Tous','All')],['ok',tr('Trouvés','Found')],['ko',tr('Manquants','Missing')]])}${seg('o',[['n',tr('Par n°','By no.')],['c',tr('Plus attrapés','Most caught')]])}</div>
+    <p id=scount style="font-size:.8rem"></p>
+    <div class=swrap><div class="lst slst" id=sl></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`;
+  }
+  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['h','📈 '+tr('Historique','History')]].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>stats(b.dataset.t));$('#bk').onclick=menu;
+  if(tab=='c'&&$('#sl')){
+    $('#sq').oninput=e=>{SV.q=e.target.value;liste2()};$('#sg').onchange=e=>{SV.g=+e.target.value;liste2()};
+    document.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>{SV[b.dataset.seg]=b.dataset.v;document.querySelectorAll(`[data-seg=${b.dataset.seg}]`).forEach(x=>x.classList.toggle('act',x==b));liste2()});
+    const sl=$('#sl');sl.onclick=sl.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detail2(+r.dataset.n)};
+    liste2();
+  }
+}
+const SV={f:'all',o:'n',q:'',g:0,sel:0};
+function liste2(){
+  const s=S.stats.poke,q=norm(SV.q).replace('#',''),num=/^\d+$/.test(q);
+  let ids=Object.keys(P).map(Number).filter(n=>(!SV.g||gen(n)==SV.g)&&(SV.f=='all'||(SV.f=='ok')==!!s[n])&&(!q||(num?n==+q:norm(P[n].fr).includes(q)||norm(P[n].en).includes(q))));
+  ids.sort((a,b)=>SV.o=='c'?(s[b]||0)-(s[a]||0)||a-b:a-b);
+  $('#scount').textContent=tr(`${ids.length} résultat${ids.length>1?'s':''}`,`${ids.length} result${ids.length>1?'s':''}`);
+  $('#sl').innerHTML=ids.length?ids.map(n=>`<div data-n=${n} class="${s[n]?'ok':'ko'}${n==SV.sel?' sel':''}"><span>#${pad(n)} - ${esc(pn(n))}</span><b>${s[n]?'×'+s[n]:'—'}</b></div>`).join(''):`<div>${tr('Aucun Pokémon trouvé avec ces filtres','No Pokémon match these filters')}</div>`;
+  if(!SV.sel||!P[SV.sel])SV.sel=ids[0]||1;detail2(SV.sel,1);
+}
+function detail2(n,keep){
+  const c=S.stats.poke[n],i=img(n);i.className='';SV.sel=n;
+  $('#dn').textContent=`#${pad(n)} ${pn(n)}`;$('#ds').replaceChildren(i);
+  $('#dt').textContent=`${(P[n].t||[]).map(tname).join(' / ')||'—'} · ${gname(gen(n))||''}`;
+  $('#dc').textContent=c?tr(`Trouvé ×${c}`,`Found ×${c}`):tr('Jamais trouvé','Never found');$('#dc').style.color=c?'var(--green)':'#e74c3c';
+  document.querySelectorAll('.slst .sel').forEach(x=>x.classList.remove('sel'));const r=$(`.slst [data-n="${n}"]`);if(r)r.classList.add('sel');
+}
+menu();demarrer();
+</script>
+</body>
+</html>
