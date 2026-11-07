@@ -96,6 +96,11 @@ h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-alig
 .toast{background-image:linear-gradient(110deg,transparent 30%,rgba(255,215,0,.28) 50%,transparent 70%);background-size:200% 100%;display:flex;gap:12px;align-items:center;width:min(350px,92vw);background:var(--st);border:2px solid var(--gold);border-radius:8px;padding:10px 14px;animation:in .3s,shine 1.3s .3s;transition:opacity .4s}.toast.out{opacity:0}
 .toast .ic{font:800 1.6rem Arial;color:var(--gold);min-width:46px;text-align:center}.toast h4{color:var(--gold)}.toast p{font-size:.8rem}
 @keyframes in{from{transform:translateX(40px);opacity:0}}
+/* partage + drapeaux */
+.flag{width:26px;height:17px;vertical-align:-3px;border-radius:2px;margin-right:6px;box-shadow:0 0 0 1px #0004}
+a.chip{text-decoration:none;display:inline-block}
+.scard{background:linear-gradient(135deg,#DC0A2D,#6d0517);border-radius:14px;padding:18px;color:#fff;margin:10px 0;box-shadow:0 6px 18px #0005}
+.scard .sl{font-weight:800;letter-spacing:.2em;opacity:.9}.scard .sn{font-size:3.6rem;font-weight:800;color:#ffd700;line-height:1.1}.scard .sn small{font-size:1.5rem;color:#fff}.scard .ss{opacity:.9}.scard .sm{margin-top:8px;font-size:.9rem}
 /* shiny */
 @keyframes glow{50%{filter:drop-shadow(0 0 28px #ffd700) brightness(1.35)}}
 .glow{animation:glow 1.2s}.sil{filter:brightness(0) opacity(.3)}
@@ -152,6 +157,8 @@ S.opts.theme??='dark';S.opts.lang??=(navigator.language||'fr').slice(0,2)=='en'?
 const tr=(fr,en)=>S.opts.lang=='en'?en:fr,pn=n=>P[n][S.opts.lang=='en'?'en':'fr'];
 const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'Electric',Glace:'Ice',Combat:'Fighting',Poison:'Poison',Sol:'Ground',Vol:'Flying',Psy:'Psychic',Insecte:'Bug',Roche:'Rock',Spectre:'Ghost',Dragon:'Dragon',Acier:'Steel','Ténèbres':'Dark','Fée':'Fairy'};
 const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
+const FLAG={fr:'<svg class=flag viewBox="0 0 3 2"><rect width=1 height=2 fill="#0055A4"/><rect x=1 width=1 height=2 fill="#fff"/><rect x=2 width=1 height=2 fill="#EF4135"/></svg>',
+en:'<svg class=flag viewBox="0 0 60 30"><clipPath id=ukc><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#ukc)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>'};
 const TC={Normal:'#A8A878',Feu:'#F08030',Eau:'#6890F0',Plante:'#78C850','Électrik':'#E0B800',Glace:'#6CC8C8',Combat:'#C03028',Poison:'#A040A0',Sol:'#C8A040',Vol:'#8F78E8',Psy:'#F85888',Insecte:'#A8B820',Roche:'#B8A038',Spectre:'#705898',Dragon:'#7038F8',Acier:'#9898B8','Ténèbres':'#705848','Fée':'#E080A0'};
 const DFI=+((location.hash.match(/defi=(\d+)/)||[])[1]||0);
 const arr=x=>x==null||x===''?[]:Array.isArray(x)?x:[x];
@@ -265,7 +272,7 @@ function defis(){
 function reglages(){
   const en=S.opts.lang=='en',th=S.opts.theme;
   modal(`<h2>⚙️ ${tr('Paramètres','Settings')}</h2>
-  <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>🇫🇷 Français</button><button class="chip ${en?'act':''}" data-l=en>🇬🇧 English</button></div>
+  <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>${FLAG.fr}Français</button><button class="chip ${en?'act':''}" data-l=en>${FLAG.en}English</button></div>
   <h4>${tr('Thème','Theme')}</h4><div class=chips>${[['dark','🌙',tr('Sombre','Dark')],['light','☀️',tr('Clair','Light')],['auto','🖥️','Auto']].map(([v,e,l])=>`<button class="chip ${th==v?'act':''}" data-th=${v}>${e} ${l}</button>`).join('')}</div>
   <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>`,
   ()=>{const q=s=>document.querySelectorAll('#mdl '+s);
@@ -391,11 +398,38 @@ function fin(k){
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
   if(!$('#shr')){const b=document.createElement('button');b.id='shr';b.textContent=tr('📤 Partager mon score','📤 Share my score');b.style.marginTop='8px';
-    b.onclick=async()=>{const lien=location.href.split('#')[0]+'#defi='+f.size,c=g.cible?' ('+labelCible(g.cible)+')':'',txt=tr(`J'ai trouvé ${f.size}/${L.length} Pokémon${c} en ${fmt(t)} sur le Pokédex ! Saurais-tu faire mieux ? ${lien}`,`I found ${f.size}/${L.length} Pokémon${c} in ${fmt(t)} on the Pokédex! Can you do better? ${lien}`);
-      try{if(navigator.share)await navigator.share({text:txt});else{await navigator.clipboard.writeText(txt);b.textContent=tr('✅ Copié !','✅ Copied!')}}catch{prompt(tr('Copie ce texte :','Copy this text:'),txt)}};
+    b.onclick=()=>partager({n:f.size,tot:L.length,t,c:g.cible?labelCible(g.cible):'',sh:(g.shiny||[]).length});
     document.querySelector('.side').append(b)}
 }
 
+async function copier(txt){
+  try{await navigator.clipboard.writeText(txt);return true}catch{}
+  try{const a=document.createElement('textarea');a.value=txt;a.style.position='fixed';a.style.opacity=0;document.body.append(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch{return false}
+}
+function carteImage(i){
+  const c=document.createElement('canvas');c.width=1080;c.height=600;const x=c.getContext('2d'),g=x.createLinearGradient(0,0,1080,600);
+  g.addColorStop(0,'#DC0A2D');g.addColorStop(1,'#6d0517');x.fillStyle=g;x.fillRect(0,0,1080,600);x.textAlign='center';
+  x.fillStyle='#fff';x.font='bold 64px sans-serif';x.fillText('POKÉDEX',540,110);
+  x.fillStyle='#ffd700';x.font='bold 200px sans-serif';x.fillText(`${i.n}/${i.tot}`,540,330);
+  x.fillStyle='#fff';x.font='40px sans-serif';x.fillText(tr('Pokémon trouvés','Pokémon found'),540,395);
+  x.font='34px sans-serif';x.fillText(`${fmt(i.t)}${i.c?' · '+i.c:''}${i.sh?' · ✨ '+i.sh+' shiny':''}`,540,465);
+  x.globalAlpha=.7;x.font='26px sans-serif';x.fillText(location.host||'',540,555);
+  c.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='pokedex-score.png';a.click()})
+}
+function partager(i){
+  const lien=location.href.split('#')[0]+'#defi='+i.n,c=i.c?' ('+i.c+')':'',
+    txt=tr(`J'ai trouvé ${i.n}/${i.tot} Pokémon${c} en ${fmt(i.t)} sur le Pokédex ! Saurais-tu faire mieux ? ${lien}`,`I found ${i.n}/${i.tot} Pokémon${c} in ${fmt(i.t)} on the Pokédex! Can you do better? ${lien}`),q=encodeURIComponent(txt);
+  modal(`<h2>📤 ${tr('Partager mon score','Share my score')}</h2>
+  <div class=scard><div class=sl>POKÉDEX</div><div class=sn>${i.n}<small>/${i.tot}</small></div><div class=ss>${tr('Pokémon trouvés','Pokémon found')}</div><div class=sm>⏱️ ${fmt(i.t)}${i.c?' · 🎯 '+esc(i.c):''}${i.sh?' · ✨ '+i.sh+' shiny':''}</div></div>
+  <div class=chips><button class=chip id=cp>📋 ${tr('Copier le message','Copy message')}</button>
+  <a class=chip style="background:#25D366" target=_blank rel=noopener href="https://wa.me/?text=${q}">WhatsApp</a>
+  <a class=chip style="background:#229ED9" target=_blank rel=noopener href="https://t.me/share/url?url=${encodeURIComponent(lien)}&text=${encodeURIComponent(txt.replace(lien,''))}">Telegram</a>
+  <a class=chip style="background:#111" target=_blank rel=noopener href="https://twitter.com/intent/tweet?text=${q}">X</a>
+  <button class=chip id=im2>⬇ ${tr('Image','Image')}</button>${navigator.share?`<button class=chip id=ns>📱 ${tr('Autres…','More…')}</button>`:''}</div>
+  <p class=small style="word-break:break-word;margin:4px 0">${esc(txt)}</p>`,
+  ()=>{$('#cp').onclick=async()=>{const ok=await copier(txt);$('#cp').textContent=ok?tr('✅ Copié !','✅ Copied!'):tr('⚠️ Copie manuelle ci-dessous','⚠️ Copy the text below')};
+    $('#im2').onclick=()=>carteImage(i);const n=$('#ns');if(n)n.onclick=()=>navigator.share({text:txt}).catch(()=>{})})
+}
 function succes(tab='p'){
   RV=()=>succes(tab);
   const inCat=(b,k)=>k=='s'?(b.k=='s'||b.k=='sg'):b.k==k,ob=b=>S.badges.has(b.id),n=BADGES.filter(ob).length,p=Math.round(100*n/BADGES.length);
