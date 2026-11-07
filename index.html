@@ -107,6 +107,11 @@ a.chip{text-decoration:none;display:inline-block}
 .dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none}
 .cell{height:64px;padding:2px;background:var(--st);border:1px solid var(--card);border-radius:8px;color:var(--lock);font-size:.68rem;display:grid;place-items:center}
 .cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{outline:2px solid var(--blue)}.cell img{max-width:100%;max-height:58px}
+/* pokédex normal */
+.cell{position:relative}
+.cell.ok{border-color:var(--green);background:radial-gradient(circle,rgba(164,208,7,.22),var(--st) 75%)}
+.cell .ct{position:absolute;right:3px;bottom:1px;font-size:.6rem;font-style:normal;background:#0008;color:#fff;border-radius:6px;padding:0 4px}
+.cell .st{position:absolute;left:2px;top:0;font-size:.7rem;font-style:normal}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
 body.light button{color:#2c3e50}
@@ -459,6 +464,13 @@ function stats(tab='a'){
       <p class=small style="margin:8px 0">${tr(`Chaque nouveau Pokémon trouvé a 1 chance sur ${SHINY_ODDS} d'être shiny.`,`Every newly found Pokémon has a 1 in ${SHINY_ODDS} chance to be shiny.`)}</p>
       <div class=sctl><select id=sg2><option value=0>${tr('Toutes les générations','All generations')}</option>${GENS.map(g=>`<option value=${g[0]} ${SV.sg==g[0]?'selected':''}>${tr('Gén.','Gen.')} ${g[0]} — ${gname(g[0])}</option>`).join('')}</select></div>
       <div class=swrap><div class=dex id=dx></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`}
+  }else if(tab=='d'){
+    if(!pret)body=`<p id=wait data-tab=d style="margin:50px 0">⏳ ${tr('Chargement du Pokédex...','Loading the Pokédex...')}</p>`;
+    else{const tot=Object.keys(P).length,nb=Object.keys(P).filter(n=>s.poke[n]).length,pc=Math.round(100*nb/tot);
+      body=`<p class=gold>📖 ${nb} / ${tot} ${tr('Pokémon dans ton Pokédex','Pokémon in your Pokédex')} (${pc} %)</p><div class=pb><i style="width:${Math.max(pc,nb?1:0)}%"></i></div>
+      <div class=sctl style="margin-top:14px"><select id=sg3><option value=0>${tr('Toutes les générations','All generations')}</option>${GENS.map(g=>`<option value=${g[0]} ${SV.dg==g[0]?'selected':''}>${tr('Gén.','Gen.')} ${g[0]} — ${gname(g[0])}</option>`).join('')}</select>
+      <div class=seg>${[['all',tr('Tous','All')],['ok',tr('Trouvés','Found')],['ko',tr('Manquants','Missing')]].map(([v,l])=>`<button data-df=${v} class="${SV.df==v?'act':''}">${l}</button>`).join('')}</div></div>
+      <div class=swrap><div class=dex id=nx></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`}
   }else if(!s.parties)body=`<p style="margin:50px 0">${tr("Aucune partie jouée pour l'instant.<br>Lance une partie depuis le menu pour générer des statistiques !",'No games played yet.<br>Start a game from the menu to generate statistics!')}</p>`;
   else if(tab=='a'){
     const T=[['🎮',s.parties,tr('Parties jouées','Games played')],['✨',`${NS} / ${TOTAL}`,tr('Shiny trouvés','Shiny found')],['🏆',`${s.record} / ${TOTAL}`,tr('Record en une partie','Best in one game')],['🔴',`${s.uniques.length} / ${TOTAL}`,tr('Pokémon différents trouvés','Different Pokémon found')],['📦',s.total,tr('Captures au total (parties confondues)','Total catches (all games)')],['⏱️',fmt(s.temps),tr('Temps de jeu total','Total play time')],['✨',`${S.badges.size} / ${BADGES.length}`,tr('Succès débloqués','Achievements unlocked')],['🔥',ty?tname(ty[0]):'—',tr('Type favori','Favorite type')+(ty?` — ${cp(ty[1])}`:'')],['🗺️',ge?gl(ge[0]):'—',tr('Génération favorite','Favorite generation')+(ge?` — ${cp(ge[1])}`:'')]];
@@ -477,8 +489,11 @@ function stats(tab='a'){
     <p id=scount style="font-size:.8rem"></p>
     <div class=swrap><div class="lst slst" id=sl></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`;
   }
-  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties||NS?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['h','📈 '+tr('Historique','History')],['s','✨ Shiny']].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties||NS?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['d','📖 Pokédex'],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['h','📈 '+tr('Historique','History')],['s','✨ Shiny']].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>stats(b.dataset.t));$('#bk').onclick=menu;
+  if(tab=='d'&&$('#nx')){$('#sg3').onchange=e=>{SV.dg=+e.target.value;dexN()};
+    document.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{SV.df=b.dataset.df;document.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('act',x==b));dexN()});
+    const nx=$('#nx');nx.onclick=nx.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detailN(+r.dataset.n)};dexN()}
   if(tab=='s'&&$('#dx')){$('#sg2').onchange=e=>{SV.sg=+e.target.value;dex()};const dx=$('#dx');dx.onclick=dx.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detail3(+r.dataset.n)};dex()}
   if(tab=='c'&&$('#sl')){
     $('#sq').oninput=e=>{SV.q=e.target.value;liste2()};$('#sg').onchange=e=>{SV.g=+e.target.value;liste2()};
@@ -487,7 +502,21 @@ function stats(tab='a'){
     liste2();
   }
 }
-const SV={f:'all',o:'n',q:'',g:0,sel:0,sg:0,ss:0};
+const SV={f:'all',o:'n',q:'',g:0,sel:0,sg:0,ss:0,dg:0,df:'all',dd:0};
+function dexN(){
+  const s=S.stats.poke,ids=Object.keys(P).map(Number).filter(n=>(!SV.dg||gen(n)==SV.dg)&&(SV.df=='all'||(SV.df=='ok')==!!s[n]));
+  if(!ids.length){$('#nx').innerHTML=`<p style="grid-column:1/-1;padding:20px">${tr('Aucun Pokémon avec ce filtre','No Pokémon match this filter')}</p>`;return}
+  $('#nx').innerHTML=ids.map(n=>`<button class="cell${s[n]?' ok':''}${n==SV.dd?' sel':''}" data-n=${n}${s[n]?` title="${esc(pn(n))}"`:''}>${s[n]?`<img src="${SPR(n)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n})">${s[n]>1?`<i class=ct>×${s[n]}</i>`:''}${S.shiny[n]?'<i class=st>✨</i>':''}`:`#${pad(n)}`}</button>`).join('');
+  detailN(ids.includes(SV.dd)?SV.dd:(ids.find(n=>s[n])||ids[0]));
+}
+function detailN(n){
+  SV.dd=n;const c=S.stats.poke[n];let i;
+  if(c){i=img(n);i.className=''}else{i=new Image();i.src=SPR(n);i.className='sil'}
+  $('#dn').textContent=`#${pad(n)} ${c?pn(n):'???'}`;$('#ds').replaceChildren(i);
+  $('#dt').textContent=c?`${(P[n].t||[]).map(tname).join(' / ')||'—'} · ${gname(gen(n))||''}${S.shiny[n]?' · ✨ shiny ×'+S.shiny[n]:''}`:'';
+  $('#dc').textContent=c?tr(`Trouvé ×${c}`,`Found ×${c}`):tr('Jamais trouvé','Never found');$('#dc').style.color=c?'var(--green)':'var(--lock)';
+  document.querySelectorAll('#nx .sel').forEach(x=>x.classList.remove('sel'));const r=$(`#nx [data-n="${n}"]`);if(r)r.classList.add('sel');
+}
 function dex(){
   const ids=Object.keys(P).map(Number).filter(n=>!SV.sg||gen(n)==SV.sg);
   $('#dx').innerHTML=ids.map(n=>S.shiny[n]?`<button class="cell got${n==SV.ss?' sel':''}" data-n=${n} title="${esc(pn(n))}"><img src="${SPR(n,true)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},true)"></button>`:`<button class="cell${n==SV.ss?' sel':''}" data-n=${n}>#${pad(n)}</button>`).join('');
