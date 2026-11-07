@@ -32,7 +32,7 @@ h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-alig
 .side{background:#2C3E50;border-radius:10px;padding:10px;display:flex;flex-direction:column;text-align:center;height:calc(100vh - 90px);position:sticky;top:76px}
 .side h3{background:var(--st);color:#F1C40F;padding:8px;border-radius:6px;font-size:1rem}
 .lst{flex:1;overflow:auto;background:#ECF0F1;color:#222;margin:8px 0;border-radius:6px;font:600 .85rem Consolas,monospace;text-align:left;user-select:none}
-.lst div{padding:3px 8px;cursor:pointer;white-space:nowrap}.lst div:hover{background:#d5dbdf}
+.lst div{padding:3px 8px;cursor:pointer;white-space:nowrap}.lst div:not(.ok):not(.ko):hover{background:#c7d3dc}.lst .ok:hover,.lst .ko:hover{filter:brightness(1.18)}
 .lst .ok{background:#27ae60;color:#fff}.lst .ko{background:#c0392b;color:#fff}
 .tmr{color:#F39C12;font-weight:700;font-size:1.2rem}.stop{background:#c0392b}
 .det{background:#ECF0F1;color:#2C3E50;border-radius:10px;padding:16px;text-align:center}
@@ -105,11 +105,11 @@ a.chip{text-decoration:none;display:inline-block}
 /* shiny */
 @keyframes glow{50%{filter:drop-shadow(0 0 28px #ffd700) brightness(1.35)}}
 .glow{animation:glow 1.2s}.sil{filter:brightness(0) opacity(.3)}
-.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none;padding:5px}
 .cell{height:64px;padding:2px;background:var(--st);border:1px solid var(--card);border-radius:8px;color:var(--lock);font-size:.68rem;display:grid;place-items:center}
-.cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{outline:2px solid var(--blue)}.cell img{max-width:100%;max-height:58px}
+.cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{outline:2px solid var(--blue);outline-offset:-2px}.cell:hover{border-color:var(--blue)}.cell img{max-width:100%;max-height:58px}
 /* pokédex normal */
-.cell{position:relative}
+.cell{position:relative}.cell img,.cell i{pointer-events:none;-webkit-user-drag:none}
 .cell.ok{border-color:var(--green);background:radial-gradient(circle,rgba(164,208,7,.22),var(--st) 75%)}
 .cell .ct{position:absolute;right:3px;bottom:1px;font-size:.6rem;font-style:normal;background:#0008;color:#fff;border-radius:6px;padding:0 4px}
 .cell .st{position:absolute;left:2px;top:0;font-size:.7rem;font-style:normal}
@@ -334,7 +334,7 @@ function jeu(){
   $('#fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();
   $('#mn').onclick=()=>{finirPartie(true);menu()};
   $('#go').onclick=chercher;$('#q').oninput=e=>rechercher(e.target.value).forEach(n=>img(n));$('#q').onkeydown=e=>{if(e.key=='Enter')chercher()};
-  const l=$('#lst');l.onclick=l.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)montrer([+r.dataset.n],g.fin)};
+  survol($('#lst'),n=>{if($('#num').dataset.n!=n)montrer([n],g.fin)});
   let ta;$('#arr').onclick=()=>{const b=$('#arr');
     if(b.dataset.ok){clearTimeout(ta);terminer('quit');return}
     b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'abandon",'⚠️ Confirm give up');b.style.background='#e67e22';
@@ -385,7 +385,7 @@ async function chercher(){
   else{son('dup');$('#spr').querySelectorAll('img').forEach(x=>anim(x,'shake'))}
 }
 function montrer(ids,statut){
-  $('#num').textContent=ids.map(n=>'#'+pad(n)).join(' / ');$('#nom').textContent=ids.map(pn).join(' / ');
+  $('#num').textContent=ids.map(n=>'#'+pad(n)).join(' / ');$('#num').dataset.n=ids.length==1?ids[0]:'';$('#nom').textContent=ids.map(pn).join(' / ');
   $('#spr').replaceChildren(...ids.map(n=>{const i=img(n,isSh(n));i.className=ids.length>1?'duo':'';return i}));
   $('#sta').innerHTML=ids.length==1?fiche(P[ids[0]]):'';
   if(statut){const ok=S.game.ids.includes(ids[0]);fb(`${pn(ids[0])} ${ok?tr('trouvé !','found!'):tr('non trouvé !','not found!')}`,ok?'#2e9e4f':'#c0392b')}
@@ -508,16 +508,21 @@ function stats(tab='a'){
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>stats(b.dataset.t));$('#bk').onclick=menu;
   if(tab=='d'&&$('#nx')){$('#sg3').onchange=e=>{SV.dg=+e.target.value;dexN()};
     document.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{SV.df=b.dataset.df;document.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('act',x==b));dexN()});
-    const nx=$('#nx');nx.onclick=nx.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detailN(+r.dataset.n)};dexN()}
-  if(tab=='s'&&$('#dx')){$('#sg2').onchange=e=>{SV.sg=+e.target.value;dex()};const dx=$('#dx');dx.onclick=dx.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detail3(+r.dataset.n)};dex()}
+    survol($('#nx'),n=>{if(n!==SV.dd)detailN(n)});dexN()}
+  if(tab=='s'&&$('#dx')){$('#sg2').onchange=e=>{SV.sg=+e.target.value;dex()};survol($('#dx'),n=>{if(n!==SV.ss)detail3(n)});dex()}
   if(tab=='c'&&$('#sl')){
     $('#sq').oninput=e=>{SV.q=e.target.value;liste2()};$('#sg').onchange=e=>{SV.g=+e.target.value;liste2()};
     document.querySelectorAll('[data-seg]').forEach(b=>b.onclick=()=>{SV[b.dataset.seg]=b.dataset.v;document.querySelectorAll(`[data-seg=${b.dataset.seg}]`).forEach(x=>x.classList.toggle('act',x==b));liste2()});
-    const sl=$('#sl');sl.onclick=sl.onmouseover=e=>{if(e.type=='mouseover'&&e.buttons!==1)return;const r=e.target.closest('[data-n]');if(r)detail2(+r.dataset.n)};
+    survol($('#sl'),n=>{if(n!==SV.sel)detail2(n)});
     liste2();
   }
 }
 const SV={f:'all',o:'n',q:'',g:0,sel:0,sg:0,ss:0,dg:0,df:'all',dd:0};
+function survol(box,fn){ // aperçu au survol ET en glissant clic enfoncé (même sur des boutons / images)
+  const at=e=>{const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest?el.closest('[data-n]'):null;if(c&&box.contains(c))fn(+c.dataset.n)};
+  box.onpointermove=at;box.onpointerdown=at;box.ondragstart=e=>e.preventDefault();
+  box.onclick=e=>{const c=e.target.closest('[data-n]');if(c)fn(+c.dataset.n)};
+}
 function dexN(){
   const s=S.stats.poke,ids=Object.keys(P).map(Number).filter(n=>(!SV.dg||gen(n)==SV.dg)&&(SV.df=='all'||(SV.df=='ok')==!!s[n]));
   if(!ids.length){$('#nx').innerHTML=`<p style="grid-column:1/-1;padding:20px">${tr('Aucun Pokémon avec ce filtre','No Pokémon match this filter')}</p>`;return}
