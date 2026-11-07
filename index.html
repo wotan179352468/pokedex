@@ -182,16 +182,17 @@ const BADGES=(()=>{const b=[];
 [['premier_pas','Premier Pas','Attrape ton 1er Pokémon','First Steps','Catch your 1st Pokémon','1',1],['debutant','Apprenti','Attrape 10 % des Pokémon (102)','Apprentice','Catch 10% of all Pokémon (102)','10',102],['collectionneur','Collectionneur','Attrape 25 % des Pokémon (256)','Collector','Catch 25% of all Pokémon (256)','25',256],['expert','Expert','Attrape 50 % des Pokémon (512)','Expert','Catch 50% of all Pokémon (512)','50',512],['maitre','Maître Dresseur','Attrape 75 % des Pokémon (768)','Pokémon Master','Catch 75% of all Pokémon (768)','75',768],['legende','Légende Vivante','Attrape 100 % des Pokémon (1025)','Living Legend','Catch 100% of all Pokémon (1025)','100',1025]].forEach(([id,nf,df,ne,de,ic,s])=>b.push({id,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic,s,k:'p'}));
 TYPES.forEach(t=>SEUILS.forEach(s=>b.push({id:`type_${loose(t)}_${s}`,get nom(){return s==100?tr(`Grand Maître ${t}`,`${tname(t)} Grand Master`):tr(`Maître ${t} ${s} %`,`${tname(t)} Master ${s}%`)},get desc(){return s==100?tr(`Trouver tous les Pokémon de type ${t}`,`Find every ${tname(t)}-type Pokémon`):tr(`Attrape ${s} % des Pokémon de type ${t}`,`Catch ${s}% of ${tname(t)}-type Pokémon`)},ic:s==100?'GM':''+s,s,k:'t',t,u:s==100})));
 GENS.forEach(([g,n,d,f])=>SEUILS.forEach(s=>b.push({id:`gen_${g}_${s}`,get nom(){return s==100?tr(`Maître de ${n}`,`Master of ${gname(g)}`):tr(`Explorateur de ${n} ${s} %`,`${gname(g)} Explorer ${s}%`)},get desc(){return tr(`${s==100?'Trouver tous les':`Attrape ${s} % des`} Pokémon de la génération ${g} (${n}, #${d}-${f})`,`${s==100?'Find every':`Catch ${s}% of`} generation ${g} Pokémon (${gname(g)}, #${d}-${f})`)},ic:s==100?'GM':''+s,s,k:'g',g,u:s==100})));
-[[25,'Chasseur de Chromatiques','Shiny Hunter'],[50,'Œil de Lynx','Eagle Eye'],[75,'Maître Chromatique','Shiny Master'],[100,'Légende Chromatique','Shiny Legend']].forEach(([s,nf,ne])=>b.push({id:'shiny_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Trouve ${s} Pokémon shiny différents`,`Find ${s} different shiny Pokémon`)},ic:'✨',s,k:'s',u:s==100}));
+[[25,'Chasseur de Chromatiques','Shiny Hunter'],[50,'Œil de Lynx','Eagle Eye'],[75,'Maître Chromatique','Shiny Master'],[100,'Légende Chromatique','Shiny Legend']].forEach(([s,nf,ne])=>b.push({id:'shiny_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Trouve ${s} Pokémon shiny différents`,`Find ${s} different shiny Pokémon`)},ic:''+s,s,k:'s',u:s==100}));
+GENS.forEach(([g,n,d,f])=>SEUILS.forEach(s=>b.push({id:`shiny_gen_${g}_${s}`,get nom(){return s==100?tr(`Maître Shiny de ${n}`,`${gname(g)} Shiny Master`):tr(`Chasseur Shiny ${n} ${s} %`,`${gname(g)} Shiny Hunter ${s}%`)},get desc(){return tr(`${s==100?'Trouver tous les':`Trouver ${s} % des`} shiny de la génération ${g} (${n})`,`${s==100?'Find every':`Find ${s}% of`} shiny from generation ${g} (${gname(g)})`)},ic:s==100?'GM':''+s,s,k:'sg',g,u:s==100})));
 [[25,'Chasseur de Succès','Achievement Hunter'],[50,'Collectionneur de Succès','Achievement Collector'],[75,'Expert des Succès','Achievement Expert'],[100,'Légende des Succès','Achievement Legend']].forEach(([s,nf,ne])=>b.push({id:'meta_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Obtenir ${s} % des succès`,`Obtain ${s}% of achievements`)},ic:''+s,s,k:'m'}));
 return b})();
 S.badges=new Set([...S.badges].filter(id=>BADGES.some(b=>b.id==id))); // retire d'anciens succès qui n'existent plus
 
 function verifier(){
-  const ids=S.game.ids,tc={},gc={},nv=[];
+  const ids=S.game.ids,tc={},gc={},nv=[],sg={};Object.keys(S.shiny).forEach(n=>{const x=gen(+n);sg[x]=(sg[x]||0)+1});
   ids.forEach(i=>{(P[i].t||[]).forEach(t=>tc[t]=(tc[t]||0)+1);const g=gen(i);gc[g]=(gc[g]||0)+1});
   for(const b of BADGES){if(b.k=='m'||S.badges.has(b.id))continue;
-    const ok=b.k=='t'?TT[b.t]&&100*(tc[b.t]||0)/TT[b.t]>=b.s:b.k=='g'?GT[b.g]&&100*(gc[b.g]||0)/GT[b.g]>=b.s:b.k=='s'?Object.keys(S.shiny).length>=b.s:ids.length>=b.s;
+    const ok=b.k=='t'?TT[b.t]&&100*(tc[b.t]||0)/TT[b.t]>=b.s:b.k=='g'?GT[b.g]&&100*(gc[b.g]||0)/GT[b.g]>=b.s:b.k=='sg'?GT[b.g]&&100*(sg[b.g]||0)/GT[b.g]>=b.s:b.k=='s'?Object.keys(S.shiny).length>=b.s:ids.length>=b.s;
     if(ok){S.badges.add(b.id);nv.push(b)}}
   const base=BADGES.filter(b=>b.k!='m'),p=100*base.filter(b=>S.badges.has(b.id)).length/base.length;
   BADGES.filter(b=>b.k=='m'&&!S.badges.has(b.id)&&p>=b.s).forEach(b=>{S.badges.add(b.id);nv.push(b)});
@@ -397,16 +398,18 @@ function fin(k){
 
 function succes(tab='p'){
   RV=()=>succes(tab);
-  const ob=b=>S.badges.has(b.id),n=BADGES.filter(ob).length,p=Math.round(100*n/BADGES.length);
+  const inCat=(b,k)=>k=='s'?(b.k=='s'||b.k=='sg'):b.k==k,ob=b=>S.badges.has(b.id),n=BADGES.filter(ob).length,p=Math.round(100*n/BADGES.length);
   const cats=[['p','🎯 '+tr('Progression','Progress')],['t','🔥 Types'],['g','🗺️ '+tr('Générations','Generations')],['s','🌟 Shiny'],['m','✨ '+tr('Méta','Meta')]];
   const carte=b=>`<div class="card ${ob(b)?'got':''} ${b.u?'ult':''} ${b.k=='m'?'meta':''}"><div class=ico>${b.ic}</div><div><h4>${esc(b.nom)}</h4><p>${esc(b.desc)}</p><small>${ob(b)?(b.k=='m'?tr('✨ OBTENU','✨ UNLOCKED'):b.u?tr('✨ GRAND MAÎTRE','✨ GRAND MASTER'):tr('DÉBLOQUÉ','UNLOCKED')):tr('VERROUILLÉ','LOCKED')}</small></div></div>`;
   const rangee=(t,s,bs,c)=>{const k=bs.filter(ob).length;return`<div class="row ${c} ${k==bs.length?'full':''}"><div><h4>${t}${k==bs.length?' ✨':''}</h4><p>${s}</p><small>${k}/${bs.length} ${tr('paliers débloqués','tiers unlocked')}</small></div><div class=pips>${bs.map(b=>`<span class="pip ${ob(b)?'got':''} ${b.u?'ult':''}" title="${esc(b.nom)}">${b.ic}</span>`).join('')}</div></div>`};
   let body;
   if(tab=='t')body=`<div class=rows>${TYPES.map(t=>rangee(tname(t),tr(`Pokémon de type ${t}`,`${tname(t)}-type Pokémon`),BADGES.filter(b=>b.t==t),'')).join('')}</div>`;
   else if(tab=='g')body=`<div class=rows>${GENS.map(([g,nm,d,f])=>rangee(`${tr('Génération','Generation')} ${g} — ${gname(g)}`,`${tr('Pokédex national','National Pokédex')} #${d}-${f}`,BADGES.filter(b=>b.g==g),'gen')).join('')}</div>`;
+  else if(tab=='s'){const sc=Object.keys(S.shiny).map(Number);
+    body=`<div class=rows>${rangee('✨ '+tr('Shiny trouvés (total)','Shiny found (total)'),tr(`Pokémon shiny différents trouvés : ${sc.length}`,`Different shiny Pokémon found: ${sc.length}`),BADGES.filter(b=>b.k=='s'),'')}${GENS.map(([g,nm,d,f])=>rangee(`${tr('Génération','Generation')} ${g} — ${gname(g)}`,`${tr('Pokédex national','National Pokédex')} #${d}-${f} · ✨ ${sc.filter(x=>gen(x)==g).length}/${f-d+1}`,BADGES.filter(b=>b.k=='sg'&&b.g==g),'')).join('')}</div>`}
   else body=`<div class=grid>${BADGES.filter(b=>b.k==tab).map(carte).join('')}</div>`;
   vue(`<div class=page><h1>${tr('SUCCÈS','ACHIEVEMENTS')}</h1><p class=gold>🏆 ${n} / ${BADGES.length} ${tr('succès débloqués','achievements unlocked')} (${p} %)</p><div class=pb><i style="width:${p}%"></i></div>
-  <div class=tabs>${cats.map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l} (${BADGES.filter(b=>b.k==k&&ob(b)).length}/${BADGES.filter(b=>b.k==k).length})</button>`).join('')}</div>${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  <div class=tabs>${cats.map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l} (${BADGES.filter(b=>inCat(b,k)&&ob(b)).length}/${BADGES.filter(b=>inCat(b,k)).length})</button>`).join('')}</div>${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>succes(b.dataset.t));$('#bk').onclick=menu;
 }
 function stats(tab='a'){
