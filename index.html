@@ -182,9 +182,10 @@ const BADGES=(()=>{const b=[];
 [['premier_pas','Premier Pas','Attrape ton 1er Pokémon','First Steps','Catch your 1st Pokémon','1',1],['debutant','Apprenti','Attrape 10 % des Pokémon (102)','Apprentice','Catch 10% of all Pokémon (102)','10',102],['collectionneur','Collectionneur','Attrape 25 % des Pokémon (256)','Collector','Catch 25% of all Pokémon (256)','25',256],['expert','Expert','Attrape 50 % des Pokémon (512)','Expert','Catch 50% of all Pokémon (512)','50',512],['maitre','Maître Dresseur','Attrape 75 % des Pokémon (768)','Pokémon Master','Catch 75% of all Pokémon (768)','75',768],['legende','Légende Vivante','Attrape 100 % des Pokémon (1025)','Living Legend','Catch 100% of all Pokémon (1025)','100',1025]].forEach(([id,nf,df,ne,de,ic,s])=>b.push({id,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic,s,k:'p'}));
 TYPES.forEach(t=>SEUILS.forEach(s=>b.push({id:`type_${loose(t)}_${s}`,get nom(){return s==100?tr(`Grand Maître ${t}`,`${tname(t)} Grand Master`):tr(`Maître ${t} ${s} %`,`${tname(t)} Master ${s}%`)},get desc(){return s==100?tr(`Trouver tous les Pokémon de type ${t}`,`Find every ${tname(t)}-type Pokémon`):tr(`Attrape ${s} % des Pokémon de type ${t}`,`Catch ${s}% of ${tname(t)}-type Pokémon`)},ic:s==100?'GM':''+s,s,k:'t',t,u:s==100})));
 GENS.forEach(([g,n,d,f])=>SEUILS.forEach(s=>b.push({id:`gen_${g}_${s}`,get nom(){return s==100?tr(`Maître de ${n}`,`Master of ${gname(g)}`):tr(`Explorateur de ${n} ${s} %`,`${gname(g)} Explorer ${s}%`)},get desc(){return tr(`${s==100?'Trouver tous les':`Attrape ${s} % des`} Pokémon de la génération ${g} (${n}, #${d}-${f})`,`${s==100?'Find every':`Catch ${s}% of`} generation ${g} Pokémon (${gname(g)}, #${d}-${f})`)},ic:s==100?'GM':''+s,s,k:'g',g,u:s==100})));
-[[1,'Chromatique !','Shiny!','Trouve ton 1er Pokémon shiny','Find your 1st shiny Pokémon'],[5,'Chasseur de Chromatiques','Shiny Hunter','Trouve 5 Pokémon shiny différents','Find 5 different shiny Pokémon'],[10,'Œil de Lynx','Eagle Eye','Trouve 10 Pokémon shiny différents','Find 10 different shiny Pokémon'],[25,'Maître Chromatique','Shiny Master','Trouve 25 Pokémon shiny différents','Find 25 different shiny Pokémon'],[50,'Légende Chromatique','Shiny Legend','Trouve 50 Pokémon shiny différents','Find 50 different shiny Pokémon']].forEach(([s,nf,ne,df,de])=>b.push({id:'shiny_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(df,de)},ic:'✨',s,k:'s',u:s==50}));
+[[25,'Chasseur de Chromatiques','Shiny Hunter'],[50,'Œil de Lynx','Eagle Eye'],[75,'Maître Chromatique','Shiny Master'],[100,'Légende Chromatique','Shiny Legend']].forEach(([s,nf,ne])=>b.push({id:'shiny_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Trouve ${s} Pokémon shiny différents`,`Find ${s} different shiny Pokémon`)},ic:'✨',s,k:'s',u:s==100}));
 [[25,'Chasseur de Succès','Achievement Hunter'],[50,'Collectionneur de Succès','Achievement Collector'],[75,'Expert des Succès','Achievement Expert'],[100,'Légende des Succès','Achievement Legend']].forEach(([s,nf,ne])=>b.push({id:'meta_'+s,get nom(){return tr(nf,ne)},get desc(){return tr(`Obtenir ${s} % des succès`,`Obtain ${s}% of achievements`)},ic:''+s,s,k:'m'}));
 return b})();
+S.badges=new Set([...S.badges].filter(id=>BADGES.some(b=>b.id==id))); // retire d'anciens succès qui n'existent plus
 
 function verifier(){
   const ids=S.game.ids,tc={},gc={},nv=[];
@@ -312,7 +313,7 @@ function jeu(){
   if(!S.game){S.game={debut:Date.now(),vu:Date.now(),mode:S.opts.min>0?'c':'l',duree:S.opts.min*60,cible:cibleDe(S.opts.cible),indices:0,ids:[],fin:false};sg()}
   const g=S.game;RV=jeu;
   vue(`<header class=top><b>POKÉDEX</b><span><button id=rg>⚙️</button><button id=fs>🖥️ ${tr('Plein écran','Fullscreen')}</button><button id=mn hidden>← MENU</button></span></header>
-  <main class=jeu><aside class=side><h3>${tr('MES POKÉMON','MY POKÉMON')}</h3><div id=lst class=lst></div><p id=cpt class=gold></p><p id=tmr class=tmr></p><button id=hint>💡 ${tr('Indice','Hint')}</button> <button id=arr class=stop>🏳️ ${tr('Abandonner','Give up')}</button></aside>
+  <main class=jeu><aside class=side><h3>${tr('MES POKÉMON','MY POKÉMON')}</h3><div id=lst class=lst></div><p id=cpt class=gold></p><p id=tmr class=tmr></p><button id=arr class=stop>🏳️ ${tr('Abandonner','Give up')}</button></aside>
   <section class=det><p id=fb class=fb>${tr('Bienvenue ! Recherche un Pokémon...','Welcome! Search for a Pokémon...')}</p><div class=srch><input id=q placeholder="${tr('Nom en français ou en anglais','Name in French or English')}" autocomplete=off autocapitalize=off spellcheck=false><button id=go>${tr('Rechercher','Search')}</button></div>
   <div id=num class=num></div><div id=nom class=nom></div><div id=spr class=spr></div><div id=sta></div></section></main>`);
   $('#rg').onclick=reglages;
@@ -324,8 +325,6 @@ function jeu(){
     if(b.dataset.ok){clearTimeout(ta);terminer('quit');return}
     b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'abandon",'⚠️ Confirm give up');b.style.background='#e67e22';
     ta=setTimeout(()=>{delete b.dataset.ok;b.textContent='🏳️ '+tr('Abandonner','Give up');b.style.background=''},4000)};
-  $('#hint').onclick=()=>{if(g.fin)return;const m=cibleIds(g).filter(n=>!g.ids.includes(n));if(!m.length)return;const n=m[Math.floor(Math.random()*m.length)],x=pn(n),k=(g.indices=(g.indices||0)+1),s=k>1?'s':'';sg();
-    fb(`💡 ${tr('Indice','Hint')} : type ${(P[n].t||[]).map(tname).join(' / ')}, ${x.length} ${tr('lettres','letters')}, ${tr('commence par','starts with')} « ${x[0]} » — ${tr(`${k} indice${s} utilisé${s}`,`${k} hint${s} used`)}`,'#2980b9')};
   liste();if(g.cible)fb('🎯 '+tr('Défi : ','Challenge: ')+labelCible(g.cible),'#7F8C8D');
   if(g.fin){fin(g.titre||'end');return}
   if(g.mode!='c')$('#tmr').hidden=true;
@@ -386,7 +385,7 @@ function fiche(p){
 function terminer(k){const g=S.game;g.fin=true;g.titre=k;g.vu=g.mode=='c'?Math.min(Date.now(),g.debut+dur(g)*1000):Date.now();sg();fin(k)}
 function fin(k){
   clearInterval(tm);const g=S.game,f=new Set(g.ids),L=cibleIds(g),T=TIT[k],titre=T?tr(T[0],T[1]):k;
-  $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=$('#hint').hidden=true;
+  $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=true;
   $('#lst').innerHTML=L.map(n=>`<div data-n=${n} class=${f.has(n)?'ok':'ko'}>#${pad(n)} - ${isSh(n)?'✨ ':''}${esc(pn(n))}</div>`).join('');
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
