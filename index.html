@@ -99,6 +99,7 @@ h1,h3,h4,p{margin:0}.c{max-width:920px;margin:0 auto;padding:24px 16px;text-alig
 /* partage + drapeaux */
 .flag{width:26px;height:17px;vertical-align:-3px;border-radius:2px;margin-right:6px;box-shadow:0 0 0 1px #0004}
 a.chip{text-decoration:none;display:inline-block}
+.dbox{background:var(--st);border:1px solid var(--card);border-radius:10px;padding:10px;margin:8px 0;text-align:left;font-size:.85rem}.dbox summary{cursor:pointer;color:var(--blue);margin-top:6px}.dbox .sctl{margin:6px 0 0}
 .sprev{width:100%;border-radius:12px;box-shadow:0 6px 18px #0005;margin:8px 0}
 .scard{background:linear-gradient(135deg,#DC0A2D,#6d0517);border-radius:14px;padding:18px;color:#fff;margin:10px 0;box-shadow:0 6px 18px #0005}
 .scard .sl{font-weight:800;letter-spacing:.2em;opacity:.9}.scard .sn{font-size:3.6rem;font-weight:800;color:#ffd700;line-height:1.1}.scard .sn small{font-size:1.5rem;color:#fff}.scard .ss{opacity:.9}.scard .sm{margin-top:8px;font-size:.9rem}
@@ -301,7 +302,7 @@ function reglages(){
       if(j.opts&&typeof j.opts=='object')Object.assign(S.opts,j.opts);
       if(j.shiny&&typeof j.shiny=='object')S.shiny=j.shiny;save(K.shiny,S.shiny);
       S.game=j.game&&Array.isArray(j.game.ids)?j.game:null;sb();ss();so();sg();applyTheme();document.documentElement.lang=S.opts.lang;closeModal();RV()}catch{alert(tr('Fichier de sauvegarde invalide.','Invalid save file.'))}};
-    confirme($('#rz'),tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase'),()=>{[K.badges,K.stats,K.opts,K.game,K.shiny].forEach(k=>save(k,null));location.reload()},'#e67e22')})
+    confirme($('#rz'),tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase'),()=>{[K.badges,K.stats,K.opts,K.game,K.shiny,'pokedex.hook'].forEach(k=>save(k,null));location.reload()},'#e67e22')})
 }
 async function demarrer(){
   ld={p:0,m:tr('Chargement du Pokédex...','Loading the Pokédex...'),err:0};majLd();
@@ -439,19 +440,24 @@ async function partager(i){
     a=(bg,href,l)=>`<a class=chip style="background:${bg}" target=_blank rel=noopener href="${href}">${l}</a>`;
   modal(`<h2>📤 ${tr('Partager mon score','Share my score')}</h2>
   <img class=sprev src="${url}" alt="">
-  <div class=chips><button class=chip id=ci>🖼️ ${tr("Copier l'image",'Copy image')}</button><button class=chip id=di>⬇ ${tr('Télécharger','Download')}</button>${navigator.share?`<button class=chip id=ns>📱 ${tr('Partager…','Share…')}</button>`:''}</div>
   <h4>${tr('Envoyer sur','Send to')}</h4><div class=chips>
   <button class=chip id=dsc style="background:#5865F2">Discord</button>
   ${a('#25D366','https://wa.me/?text='+q,'WhatsApp')}${a('#229ED9','https://t.me/share/url?url='+encodeURIComponent(lien)+'&text='+encodeURIComponent(txt.replace(lien,'')),'Telegram')}
   ${a('#111','https://twitter.com/intent/tweet?text='+q,'X')}${a('#1877F2','https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(lien)+'&quote='+encodeURIComponent(txt.replace(lien,'')),'Facebook')}
   ${a('#FF4500','https://www.reddit.com/submit?url='+encodeURIComponent(lien)+'&title='+encodeURIComponent(txt.replace(lien,'')),'Reddit')}${a('#34A853','sms:?body='+q,'💬 SMS')}${a('#7f8c8d','mailto:?subject='+encodeURIComponent('Pokédex')+'&body='+q,'✉️ E-mail')}</div>
+  <div id=dbox class=dbox hidden><p><b id=dbx></b> ${tr("Ouvre dans Discord le salon ou le message privé où tu veux l'envoyer, colle-le (Ctrl + V, ou appui long sur mobile) puis envoie.","In Discord, open the channel or DM you want, paste it (Ctrl + V, or long-press on mobile) and send.")}</p>
+  <div class=chips><a class=chip style="background:#5865F2" target=_blank rel=noopener href="https://discord.com/app">${tr('Ouvrir Discord','Open Discord')}</a></div>
+  <details><summary>${tr('Avancé : envoyer directement dans un salon','Advanced: post directly in a channel')}</summary>
+  <p class=small>${tr("Dans Discord : clic droit sur le salon → Modifier le salon → Intégrations → Webhooks → Nouveau webhook → Copier l'URL. Colle-la ici : le message et l'image seront postés dans ce salon.","In Discord: right-click the channel → Edit Channel → Integrations → Webhooks → New Webhook → Copy URL. Paste it here: the message and image will be posted in that channel.")}</p>
+  <div class=sctl><input id=hk placeholder="https://discord.com/api/webhooks/..." value="${esc(load('pokedex.hook',''))}"><button class=chip id=hs style="background:#5865F2">${tr('Envoyer','Send')}</button></div></details></div>
   <h4>${tr('Copier','Copy')}</h4><div class=chips><button class=chip id=cm>📋 ${tr('Le message','Message')}</button><button class=chip id=cl>🔗 ${tr('Le lien','Link')}</button></div>
   <p class=small style="word-break:break-word;margin:4px 0">${esc(txt)}</p>`,
   ()=>{const set=(id,t)=>{$('#'+id).textContent=t};
-    $('#ci').onclick=async()=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);set('ci',tr('✅ Image copiée !','✅ Image copied!'))}catch{set('ci',tr('⚠️ Non pris en charge : télécharge','⚠️ Not supported: download it'))}};
-    $('#di').onclick=()=>{const l=document.createElement('a');l.href=url;l.download='pokedex-score.png';l.click()};
-    const n=$('#ns');if(n)n.onclick=()=>{const f=new File([blob],'pokedex-score.png',{type:'image/png'});navigator.share(navigator.canShare&&navigator.canShare({files:[f]})?{files:[f],text:txt}:{text:txt}).catch(()=>{})};
-    $('#dsc').onclick=async()=>{const ok=await copier(txt);set('dsc',ok?tr('✅ Copié : colle-le dans Discord','✅ Copied: paste it in Discord'):'Discord');window.open('https://discord.com/channels/@me','_blank','noopener')};
+    $('#dsc').onclick=async()=>{const ok=await copier(txt),d=$('#dbox');d.hidden=false;$('#dbx').textContent=ok?tr('✅ Message copié !','✅ Message copied!'):tr('⚠️ Copie impossible : sélectionne le texte en bas','⚠️ Copy failed: select the text below');if(d.scrollIntoView)d.scrollIntoView({block:'nearest'})};
+    $('#hs').onclick=async()=>{const u=$('#hk').value.trim();
+      if(!/^https:\/\/((canary|ptb)\.)?(discord|discordapp)\.com\/api\/webhooks\//.test(u)){set('hs',tr('⚠️ URL invalide','⚠️ Invalid URL'));return}
+      set('hs','⏳');try{const f=new FormData();f.append('payload_json',JSON.stringify({content:txt,username:'Pokédex'}));f.append('files[0]',blob,'pokedex-score.png');
+        const r=await fetch(u,{method:'POST',body:f});if(!r.ok)throw 0;save('pokedex.hook',u);set('hs',tr('✅ Envoyé !','✅ Sent!'))}catch{set('hs',tr('⚠️ Échec : colle le message à la main','⚠️ Failed: paste the message manually'))}};
     $('#cm').onclick=async()=>set('cm',(await copier(txt))?tr('✅ Copié !','✅ Copied!'):tr('⚠️ Copie manuelle ci-dessous','⚠️ Copy the text below'));
     $('#cl').onclick=async()=>set('cl',(await copier(lien))?tr('✅ Copié !','✅ Copied!'):tr('⚠️ Copie manuelle','⚠️ Copy manually'))})
 }
