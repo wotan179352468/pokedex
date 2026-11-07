@@ -105,9 +105,9 @@ a.chip{text-decoration:none;display:inline-block}
 /* shiny */
 @keyframes glow{50%{filter:drop-shadow(0 0 28px #ffd700) brightness(1.35)}}
 .glow{animation:glow 1.2s}.sil{filter:brightness(0) opacity(.3)}
-.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none;padding:5px}
+.dex{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:68vh;overflow:auto;user-select:none;padding:8px;margin-top:8px}
 .cell{height:64px;padding:2px;background:var(--st);border:1px solid var(--card);border-radius:8px;color:var(--lock);font-size:.68rem;display:grid;place-items:center}
-.cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{outline:2px solid var(--blue);outline-offset:-2px}.cell:hover{border-color:var(--blue)}.cell img{max-width:100%;max-height:58px}
+.cell.got{border-color:var(--gold);background:radial-gradient(circle,rgba(255,215,0,.3),var(--st) 75%)}.cell.sel{box-shadow:inset 0 0 0 3px var(--blue)}.cell:hover{border-color:var(--blue)}.cell img{max-width:100%;max-height:58px}
 /* pokédex normal */
 .cell{position:relative}.cell img,.cell i{pointer-events:none;-webkit-user-drag:none}
 .cell.ok{border-color:var(--green);background:radial-gradient(circle,rgba(164,208,7,.22),var(--st) 75%)}
@@ -275,16 +275,33 @@ function defis(){
     $('#mdl [data-r]').onclick=()=>maj(()=>{S.opts.cible=''});
     $('#mdl .box').scrollTop=sc})
 }
+function confirme(b,conf,act,bg){ // 1er clic = demande de confirmation, 2e clic = action ; le bouton se remet à zéro au bout de 5 s
+  const lab=b.textContent,base=b.style.background;let t=0;
+  b.onclick=()=>{if(t){clearInterval(t);t=0;act();return}
+    let s=5;const set=()=>{b.textContent=`${conf} (${s})`};b.style.background=bg;set();
+    t=setInterval(()=>{if(--s<=0){clearInterval(t);t=0;b.textContent=lab;b.style.background=base}else set()},1000)}
+}
 function reglages(){
   const en=S.opts.lang=='en',th=S.opts.theme;
   modal(`<h2>⚙️ ${tr('Paramètres','Settings')}</h2>
   <h4>${tr('Langue','Language')}</h4><div class=chips><button class="chip ${!en?'act':''}" data-l=fr>${FLAG.fr}Français</button><button class="chip ${en?'act':''}" data-l=en>${FLAG.en}English</button></div>
   <h4>${tr('Thème','Theme')}</h4><div class=chips>${[['dark','🌙',tr('Sombre','Dark')],['light','☀️',tr('Clair','Light')],['auto','🖥️','Auto']].map(([v,e,l])=>`<button class="chip ${th==v?'act':''}" data-th=${v}>${e} ${l}</button>`).join('')}</div>
-  <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>`,
+  <h4>${tr('Son','Sound')}</h4><div class=chips><button class="chip ${S.opts.son?'act':''}" data-s=1>🔊 ${tr('Activé','On')}</button><button class="chip ${!S.opts.son?'act':''}" data-s=0>🔇 ${tr('Coupé','Muted')}</button></div>
+  <h4>${tr('Sauvegarde','Save data')}</h4><div class=chips><button class=chip id=ex>⬇ ${tr('Exporter','Export')}</button><button class=chip id=im>⬆ ${tr('Importer','Import')}</button></div>
+  <div class=chips><button class=chip id=rz style="background:#c0392b">🗑 ${tr('Tout effacer','Erase everything')}</button></div><input type=file id=fi accept=.json hidden>`,
   ()=>{const q=s=>document.querySelectorAll('#mdl '+s);
     q('[data-l]').forEach(b=>b.onclick=()=>{S.opts.lang=b.dataset.l;so();document.documentElement.lang=S.opts.lang;RV();reglages()});
     q('[data-th]').forEach(b=>b.onclick=()=>{S.opts.theme=b.dataset.th;so();applyTheme();reglages()});
-    q('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()})})
+    q('[data-s]').forEach(b=>b.onclick=()=>{S.opts.son=b.dataset.s=='1';so();if(S.opts.son)son('cap');reglages()});
+    $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game,shiny:S.shiny})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
+    $('#im').onclick=()=>$('#fi').click();
+    $('#fi').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());
+      if(Array.isArray(j.badges))S.badges=new Set(j.badges.map(String));
+      if(j.stats&&typeof j.stats=='object')Object.assign(S.stats,j.stats);
+      if(j.opts&&typeof j.opts=='object')Object.assign(S.opts,j.opts);
+      if(j.shiny&&typeof j.shiny=='object')S.shiny=j.shiny;save(K.shiny,S.shiny);
+      S.game=j.game&&Array.isArray(j.game.ids)?j.game:null;sb();ss();so();sg();applyTheme();document.documentElement.lang=S.opts.lang;closeModal();RV()}catch{alert(tr('Fichier de sauvegarde invalide.','Invalid save file.'))}};
+    confirme($('#rz'),tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase'),()=>{[K.badges,K.stats,K.opts,K.game,K.shiny].forEach(k=>save(k,null));location.reload()},'#e67e22')})
 }
 async function demarrer(){
   ld={p:0,m:tr('Chargement du Pokédex...','Loading the Pokédex...'),err:0};majLd();
@@ -305,23 +322,10 @@ function menu(){
   <button id=df class=defbtn>${defLabel()}</button>
   <button id=st class=big>START</button>
   <button id=su class=steam>🏆 ${tr('SUCCÈS','ACHIEVEMENTS')}</button><button id=sa class="steam vert">📊 ${tr('STATISTIQUES','STATISTICS')}</button>
-  <p class=small><button id=ex>⬇ ${tr('Exporter ma sauvegarde','Export my save')}</button><button id=im>⬆ ${tr('Importer','Import')}</button><button id=rz>🗑 ${tr('Tout effacer','Erase everything')}</button></p><input type=file id=fi accept=.json hidden>
   <p class=small>${tr('Ta progression est sauvegardée dans ce navigateur. Données : TyraDex · Projet de fan non officiel, Pokémon © Nintendo / Game Freak.','Your progress is saved in this browser. Data: TyraDex · Unofficial fan project, Pokémon © Nintendo / Game Freak.')}</p></div>`);
   $('#rg').onclick=reglages;$('#df').onclick=defis;majLd();
   $('#st').onclick=()=>{const c=cibleDe(S.opts.cible);if(c&&!cibleIds({cible:c}).length){defis();return}finirPartie(false);jeu()};
   $('#su').onclick=()=>succes();$('#sa').onclick=()=>stats();
-  $('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({badges:[...S.badges],stats:S.stats,opts:S.opts,game:S.game,shiny:S.shiny})],{type:'application/json'}));a.download='pokedex-sauvegarde.json';a.click()};
-  $('#im').onclick=()=>$('#fi').click();
-  $('#fi').onchange=async e=>{try{const j=JSON.parse(await e.target.files[0].text());
-    if(Array.isArray(j.badges))S.badges=new Set(j.badges.map(String));
-    if(j.stats&&typeof j.stats=='object')Object.assign(S.stats,j.stats);
-    if(j.opts&&typeof j.opts=='object')Object.assign(S.opts,j.opts);
-    if(j.shiny&&typeof j.shiny=='object')S.shiny=j.shiny;save(K.shiny,S.shiny);
-    S.game=j.game&&Array.isArray(j.game.ids)?j.game:null;sb();ss();so();sg();menu()}catch{alert(tr('Fichier de sauvegarde invalide.','Invalid save file.'))}};
-  let tz;$('#rz').onclick=()=>{const b=$('#rz');
-    if(b.dataset.ok){clearTimeout(tz);[K.badges,K.stats,K.opts,K.game,K.shiny].forEach(k=>save(k,null));location.reload();return}
-    b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'effacement",'⚠️ Confirm erase');b.style.background='#c0392b';
-    tz=setTimeout(()=>{delete b.dataset.ok;b.textContent='🗑 '+tr('Tout effacer','Erase everything');b.style.background=''},4000)};
 }
 function jeu(){
   if(!S.game){S.game={debut:Date.now(),vu:Date.now(),mode:S.opts.min>0?'c':'l',duree:S.opts.min*60,cible:cibleDe(S.opts.cible),indices:0,ids:[],fin:false};sg()}
@@ -335,10 +339,7 @@ function jeu(){
   $('#mn').onclick=()=>{finirPartie(true);menu()};
   $('#go').onclick=chercher;$('#q').oninput=e=>rechercher(e.target.value).forEach(n=>img(n));$('#q').onkeydown=e=>{if(e.key=='Enter')chercher()};
   survol($('#lst'),n=>{if($('#num').dataset.n!=n)montrer([n],g.fin)});
-  let ta;$('#arr').onclick=()=>{const b=$('#arr');
-    if(b.dataset.ok){clearTimeout(ta);terminer('quit');return}
-    b.dataset.ok=1;b.textContent=tr("⚠️ Confirmer l'abandon",'⚠️ Confirm give up');b.style.background='#e67e22';
-    ta=setTimeout(()=>{delete b.dataset.ok;b.textContent='🏳️ '+tr('Abandonner','Give up');b.style.background=''},4000)};
+  confirme($('#arr'),tr("⚠️ Confirmer l'abandon",'⚠️ Confirm give up'),()=>terminer('quit'),'#e67e22');
   liste();if(g.cible)fb('🎯 '+tr('Défi : ','Challenge: ')+labelCible(g.cible),'#7F8C8D');
   if(g.fin){fin(g.titre||'end');return}
   if(g.mode!='c')$('#tmr').hidden=true;
@@ -504,7 +505,7 @@ function stats(tab='a'){
     <p id=scount style="font-size:.8rem"></p>
     <div class=swrap><div class="lst slst" id=sl></div><aside class=sdet><div id=dn class=nom>&nbsp;</div><div id=ds class=spr></div><p id=dt></p><p id=dc class=dcount></p></aside></div>`;
   }
-  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties||NS?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['d','📖 Pokédex'],['c','🔢 '+tr('Captures par Pokémon','Catches per Pokémon')],['s','✨ Shiny']].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
+  vue(`<div class=page><h1>${tr('STATISTIQUES','STATISTICS')}</h1>${s.parties||NS?`<div class=tabs>${[['a','📊 '+tr("Vue d'ensemble",'Overview')],['d','📖 '+tr('Pokémon trouvés','Found Pokémon')],['s','✨ Shiny']].map(([k,l])=>`<button data-t=${k} class="${k==tab?'act':''}">${l}</button>`).join('')}</div>`:''}${body}<button class=back id=bk>← ${tr('RETOUR','BACK')}</button></div>`);
   document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>stats(b.dataset.t));$('#bk').onclick=menu;
   if(tab=='d'&&$('#nx')){$('#sg3').onchange=e=>{SV.dg=+e.target.value;dexN()};
     document.querySelectorAll('[data-df]').forEach(b=>b.onclick=()=>{SV.df=b.dataset.df;document.querySelectorAll('[data-df]').forEach(x=>x.classList.toggle('act',x==b));dexN()});
