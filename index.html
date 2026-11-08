@@ -431,7 +431,7 @@ function fin(k){
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
   if(!$('#shr')){const b=document.createElement('button');b.id='shr';b.textContent=tr('📋 Copier mon score (image)','📋 Copy my score (image)');b.style.marginTop='8px';
-    b.onclick=()=>partager({n:f.size,tot:L.length,t,c:g.cible?labelCible(g.cible):'',sh:(g.shiny||[]).length,ids:g.ids,shl:g.shiny||[]},b);
+    b.onclick=()=>partager({n:f.size,tot:L.length,t,c:g.cible?labelCible(g.cible):'',sh:(g.shiny||[]).length,ids:g.ids,shl:g.shiny||[],all:L},b);
     document.querySelector('.side').append(b)}
 }
 
@@ -467,10 +467,12 @@ async function carte(i){ // image « Pokédex » avec les stats de la partie
   y+=36;x.fillText('⏱ '+fmt(i.t),X,y,300);
   if(i.c){y+=32;x.fillText('🎯 '+i.c,X,y,300)}
   if(i.sh){y+=32;x.fillText('✨ '+i.sh+' shiny',X,y,300)}
-  x.fillStyle='#9fb3c8';x.font='16px sans-serif';x.fillText(tr('PAR GÉNÉRATION','BY GENERATION'),X,478);
-  GENS.forEach(([gn,,d,f],k)=>{const cnt=ids.filter(n=>n>=d&&n<=f).length,fr=cnt/(f-d+1),bh=Math.max(4,100*fr),bx=X+k*34;
-    rr(bx,500,28,100,6,'#34495e');rr(bx,600-bh,28,bh,6,'hsl('+(k*38)+',75%,58%)');
-    x.fillStyle='#cfd8e3';x.font='15px sans-serif';x.textAlign='center';x.fillText('G'+gn,bx+14,622);x.textAlign='left'});
+  const all=i.all&&i.all.length?i.all:Array.from({length:i.tot},(_,k)=>k+1),gs=GENS.filter(([,,d,f])=>all.some(n=>n>=d&&n<=f)),bw=Math.min(44,Math.floor((304-(gs.length-1)*6)/gs.length));
+  x.fillStyle='#9fb3c8';x.font='16px sans-serif';x.fillText(gs.length==1?tr('GÉNÉRATION ','GENERATION ')+gs[0][0]+' · '+gs[0][1]:tr('PAR GÉNÉRATION','BY GENERATION'),X,478,300);
+  gs.forEach(([gn,,d,f],k)=>{const tot=all.filter(n=>n>=d&&n<=f).length,cnt=ids.filter(n=>n>=d&&n<=f).length,bh=Math.max(4,100*(tot?cnt/tot:0)),bx=X+k*(bw+6);
+    rr(bx,500,bw,100,6,'#34495e');rr(bx,600-bh,bw,bh,6,'hsl('+(gn*38)+',75%,58%)');
+    x.fillStyle='#cfd8e3';x.font='15px sans-serif';x.textAlign='center';x.fillText('G'+gn,bx+bw/2,622);
+    if(gs.length<=4){x.fillStyle='#fff';x.font='bold 15px sans-serif';x.fillText(cnt+'/'+tot,bx+bw/2,Math.max(516,594-bh))}x.textAlign='left'});
   x.globalAlpha=.8;x.fillStyle='#fff';x.font='24px sans-serif';x.textAlign='center';x.fillText(location.host+location.pathname.replace(/index\.html$/,''),W/2,682);
   return c
 }
