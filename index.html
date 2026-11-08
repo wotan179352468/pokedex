@@ -130,10 +130,10 @@ body.ingame .jeu{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
 body.ingame .side{height:auto;position:static;min-height:0}
 body.ingame .det{overflow-y:auto;scrollbar-width:none;min-height:0}
 body.ingame .det::-webkit-scrollbar{display:none}
-.jeu.fin .dex{grid-template-columns:repeat(3,1fr);max-height:none;flex:1;min-height:0;margin:8px 0;padding:6px;gap:6px;background:transparent}
+.jeu.fin .dex{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:auto;align-content:start;overflow-x:hidden;max-height:none;flex:1;min-height:0;margin:8px 0;padding:6px;gap:6px;background:transparent}
 .cell.ko{border-color:#e74c3c;background:radial-gradient(circle,rgba(231,76,60,.28),var(--st) 75%)}
 .jeu.fin .cell{border-width:3px}.jeu.fin .cell.ok{border-color:#2ecc71;background:var(--st)}.jeu.fin .cell.ko{border-color:#e74c3c;background:var(--st)}
-.jeu.fin .cell{height:auto;aspect-ratio:1;padding:3px}.jeu.fin .cell img{max-height:100%;width:100%;object-fit:contain}
+.jeu.fin .cell{height:auto;aspect-ratio:1;padding:3px;align-self:start}.jeu.fin .cell{min-width:0;overflow:hidden}.jeu.fin .cell img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);max-height:none;object-fit:contain}
 @media(max-width:760px){body.ingame{overflow:auto}body.ingame #app{height:auto;display:block}body.ingame .top{position:sticky}body.ingame .jeu{grid-template-rows:auto}body.ingame .side{height:420px}}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
@@ -352,7 +352,7 @@ function menu(){
 function jeu(){
   if(!S.game){S.game={debut:Date.now(),vu:Date.now(),mode:S.opts.min>0?'c':'l',duree:S.opts.min*60,cible:cibleDe(S.opts.cible),indices:0,ids:[],fin:false};sg()}
   const g=S.game;RV=jeu;
-  vue(`<header class=top><b>POKÉDEX</b><span><button id=rg>⚙️</button><button id=fs>🖥️ ${tr('Plein écran','Fullscreen')}</button><button id=mn hidden>← MENU</button></span></header>
+  vue(`<header class=top><b>POKÉDEX</b><span><button id=rg>⚙️</button><button id=fs>🖥️ ${tr('Plein écran','Fullscreen')}</button><button id=mn hidden>MENU</button></span></header>
   <main class=jeu><aside class=side><h3>${tr('MES POKÉMON','MY POKÉMON')}</h3><div id=lst class=lst></div><p id=cpt class=gold></p><p id=tmr class=tmr></p><button id=arr class=stop>🏳️ ${tr('Abandonner','Give up')}</button></aside>
   <section class=det><p id=fb class=fb>${tr('Bienvenue ! Recherche un Pokémon...','Welcome! Search for a Pokémon...')}</p><div class=srch><input id=q placeholder="${tr('Nom en français ou en anglais','Name in French or English')}" autocomplete=off autocapitalize=off spellcheck=false><button id=go>${tr('Rechercher','Search')}</button></div>
   <div id=num class=num></div><div id=nom class=nom></div><div id=spr class=spr></div><div id=sta></div></section></main>`);
