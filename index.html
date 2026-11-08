@@ -136,9 +136,8 @@ body.ingame .det::-webkit-scrollbar{display:none}
 .jeu.fin .cell{height:0;padding:0 0 100% 0;align-self:start} /* case carrée : la hauteur vient du padding, plus de aspect-ratio */.jeu.fin .cell{min-width:0;overflow:hidden}.jeu.fin .cell img{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);max-height:none;object-fit:contain}
 @media(max-width:760px){body.ingame{overflow:auto}body.ingame #app{height:auto;display:block}body.ingame .top{position:sticky}body.ingame .jeu{grid-template-rows:auto}body.ingame .side{height:420px}}
 /* types */
-.tps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}.tps span{color:#fff;border-radius:12px;padding:2px 13px;font-size:.78rem;font-weight:700;text-shadow:0 1px 2px #0007}
-.tdots{float:right;display:flex;gap:3px;margin-top:4px;pointer-events:none}.tdots i{width:10px;height:10px;border-radius:50%;display:block;box-shadow:0 0 0 1px #0004}
-.cell .tdots{position:absolute;left:5px;bottom:5px;float:none;margin:0}
+.tps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}.tp{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 14px 0 3px;border-radius:15px;background:var(--tc);border:2px solid rgba(0,0,0,.5);color:#fff;font-weight:800;font-style:italic;text-transform:uppercase;font-size:.8rem;letter-spacing:.03em;text-shadow:0 1px 0 #000a,1px 0 0 #0007,-1px 0 0 #0007;box-shadow:inset 0 3px 0 rgba(255,255,255,.3)}
+.tp .ti{width:21px;height:21px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--tc);box-shadow:0 0 0 1.5px rgba(0,0,0,.4);text-shadow:none}.ti svg{width:14px;height:14px;fill:currentColor}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
 body.light button{color:#2c3e50}
@@ -191,7 +190,7 @@ const TEN={Normal:'Normal',Feu:'Fire',Eau:'Water',Plante:'Grass','Électrik':'El
 const tname=x=>S.opts.lang=='en'?TEN[x]||x:x,GEN_EN=['Kanto','Johto','Hoenn','Sinnoh','Unova','Kalos','Alola','Galar','Paldea'],gname=g=>S.opts.lang=='en'?GEN_EN[g-1]:GENS[g-1][1];
 const FLAG={fr:'<svg class=flag viewBox="0 0 3 2"><rect width=1 height=2 fill="#0055A4"/><rect x=1 width=1 height=2 fill="#fff"/><rect x=2 width=1 height=2 fill="#EF4135"/></svg>',
 en:'<svg class=flag viewBox="0 0 60 30"><clipPath id=ukc><path d="M30,15h30v15zv15h-30zh-30v-15zv-15h30z"/></clipPath><path d="M0,0v30h60v-30z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#ukc)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></svg>'};
-const TC={Normal:'#A8A878',Feu:'#F08030',Eau:'#6890F0',Plante:'#78C850','Électrik':'#E0B800',Glace:'#6CC8C8',Combat:'#C03028',Poison:'#A040A0',Sol:'#C8A040',Vol:'#8F78E8',Psy:'#F85888',Insecte:'#A8B820',Roche:'#B8A038',Spectre:'#705898',Dragon:'#7038F8',Acier:'#9898B8','Ténèbres':'#705848','Fée':'#E080A0'};
+const TC={Normal:'#9FA19F',Feu:'#E62829',Eau:'#2980EF',Plante:'#3FA129','Électrik':'#FAC000',Glace:'#3DCEF3',Combat:'#FF8000',Poison:'#9141CB',Sol:'#915121',Vol:'#81B9EF',Psy:'#EF4179',Insecte:'#91A119',Roche:'#AFA981',Spectre:'#704170',Dragon:'#5060E1',Acier:'#60A1B8','Ténèbres':'#624D4E','Fée':'#EF70EF'};
 const DFI=+((location.hash.match(/defi=(\d+)/)||[])[1]||0);
 const arr=x=>x==null||x===''?[]:Array.isArray(x)?x:[x];
 const nc=c=>!c?{t:[],g:[]}:c.k?(c.k=='t'?{t:[c.v],g:[]}:{t:[],g:[c.v]}):{t:arr(c.t),g:arr(c.g).map(Number)}; // accepte les anciens formats
@@ -386,7 +385,7 @@ function jeu(){
   tick();if(!g.fin){tm=setInterval(tick,500);$('#q').focus()}
 }
 function fb(t,c){const f=$('#fb');f.textContent=t;f.style.color=c}
-function liste(){const g=S.game;$('#lst').innerHTML=[...g.ids].sort((a,b)=>a-b).map(n=>`<div data-n=${n}>#${pad(n)} - ${isSh(n)?'✨ ':''}${esc(pn(n))}${dots(n)}</div>`).join('');$('#cpt').textContent=`${tr('Trouvés','Found')} : ${g.ids.length}/${cibleIds(g).length}`}
+function liste(){const g=S.game;$('#lst').innerHTML=[...g.ids].sort((a,b)=>a-b).map(n=>`<div data-n=${n}>#${pad(n)} - ${isSh(n)?'✨ ':''}${esc(pn(n))}</div>`).join('');$('#cpt').textContent=`${tr('Trouvés','Found')} : ${g.ids.length}/${cibleIds(g).length}`}
 const phon=s=>loose(s).replace(/ph/g,'f').replace(/qu|k/g,'c').replace(/tch/g,'ch').replace(/y/g,'i').replace(/w/g,'v').replace(/h/g,'').replace(/(.)\1+/g,'$1');
 function dl(a,b){ // distance de Damerau-Levenshtein : une lettre inversée = 1 erreur
   const n=b.length;let pp=null,p=Array.from({length:n+1},(_,j)=>j);
@@ -431,9 +430,26 @@ function montrer(ids,statut){
   if(statut){const ok=S.game.ids.includes(ids[0]);fb(ok?`✅ ${pn(ids[0])} ${tr('trouvé !','found!')}`:`❌ ${pn(ids[0])} : ${tr('pas trouvé','not found')}`,ok?'#2e9e4f':'#c0392b')}
   document.querySelectorAll('#lst .sel').forEach(x=>x.classList.remove('sel'));if(ids.length==1){const r=$(`#lst [data-n="${ids[0]}"]`);if(r)r.classList.add('sel')}
 }
-const typeChips=a=>(a||[]).map(t=>`<span style="background:${TC[t]||'#777'}">${tname(t)}</span>`).join('');
+const TI={Normal:'<circle cx="12" cy="12" r="6.500" fill="none" stroke="currentColor" stroke-width="3.500"/>',
+Feu:'<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-7 1 2 2 2 3 0 0-2 0-3 0-5z"/>',
+Eau:'<path d="M12 2C9 7 5 10.500 5 15a7 7 0 0 0 14 0c0-4.500-4-8-7-13z"/>',
+Plante:'<path d="M20 4C9 4 4 10 4 18c9 0 16-5 16-14z"/>',
+'Électrik':'<path d="M13 2 5 14h6l-1 8 8-12h-6z"/>',
+Glace:'<path d="M12 3v18M4.200 7.500l15.600 9M4.200 16.500l15.600-9" fill="none" stroke="currentColor" stroke-width="2.600" stroke-linecap="round"/>',
+Combat:'<path d="M6 10h12v6a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4z"/><rect x="6" y="5" width="3" height="6.500" rx="1.500"/><rect x="10.500" y="4" width="3" height="7" rx="1.500"/><rect x="15" y="5" width="3" height="6.500" rx="1.500"/>',
+Poison:'<path d="M12 3C9 8 6 10 6 14a6 6 0 0 0 12 0c0-4-3-6-6-11z"/><circle cx="18" cy="5.500" r="1.800"/><circle cx="6" cy="6" r="1.300"/>',
+Sol:'<path d="M2 20 9 7l4 6 3-4 6 11z"/>',
+Vol:'<path d="M3 17C9 17 15 13 21 4 19 14 13 20 7 20z"/>',
+Psy:'<path d="M2 12S6 5 12 5s10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3.200" fill="#fff"/><circle cx="12" cy="12" r="1.400"/>',
+Insecte:'<ellipse cx="12" cy="14" rx="5" ry="7"/><path d="M9 7 7 3M15 7l2-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+Roche:'<path d="M12 2l9 6-3 12H6L3 8z"/>',
+Spectre:'<path d="M5 21V11a7 7 0 0 1 14 0v10l-3-2-2 2-2-2-2 2-2-2z"/><circle cx="9.500" cy="11" r="1.600" fill="#fff"/><circle cx="14.500" cy="11" r="1.600" fill="#fff"/>',
+Dragon:'<path d="M12 2c4 3 7 7 7 11a7 7 0 0 1-14 0c0-4 3-8 7-11z"/><path d="M9 14c1.500 2 4.500 2 6 0" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/>',
+Acier:'<path d="M12 2l8 5v10l-8 5-8-5V7z"/><circle cx="12" cy="12" r="3.500" fill="#fff"/>',
+'Ténèbres':'<path d="M15.500 3A9 9 0 1 0 21 15 7 7 0 0 1 15.500 3z"/>',
+'Fée':'<path d="M12 2l2.500 7.500L22 12l-7.500 2.500L12 22l-2.500-7.500L2 12l7.500-2.500z"/>'};
+const typeChips=a=>(a||[]).map(t=>`<span class=tp style="--tc:${TC[t]||'#777'}"><i class=ti><svg viewBox="0 0 24 24">${TI[t]||''}</svg></i>${tname(t)}</span>`).join('');
 const typesJeu=n=>typesAt(n,S.game?eraDe(nc(S.game.cible)):9); // types affichés : ceux de l'époque du défi
-const dots=n=>`<b class=tdots>${typesJeu(n).map(t=>`<i style="background:${TC[t]||'#777'}" title="${tname(t)}"></i>`).join('')}</b>`;
 const STEN={hp:'HP',atk:'ATK',def:'DEF',spe_atk:'SP.ATK',spe_def:'SP.DEF',vit:'SPD'};
 function fiche(p,n){
   const s=p.s||{};let h=`<div class=lbl>TYPES</div><div class=tps>${typeChips(typesJeu(n))}</div><div class=lbl>${tr('STATISTIQUES','STATS')}</div><div class=sta>${STATS.map(([k,a,c])=>{const v=s[k]||0;return`<div class=sr><span>${tr(a,STEN[k])}</span><em><i style="width:${Math.min(100,v/180*100)}%;background:${c}"></i></em><b>${v}</b></div>`}).join('')}</div>`;
@@ -445,7 +461,7 @@ function fin(k){
   clearInterval(tm);const g=S.game,f=new Set(g.ids),L=cibleIds(g),T=TIT[k],titre=T?tr(T[0],T[1]):k;
   $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=true;
   const jeu=$('.jeu');if(jeu)jeu.classList.add('fin');$('#lst').className='dex';
-  $('#lst').innerHTML=L.map(n=>f.has(n)?`<button class="cell ok" data-n=${n}><img src="${SPR(n,isSh(n))}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},${isSh(n)})">${isSh(n)?'<i class=st>✨</i>':''}${dots(n)}</button>`:`<button class="cell ko" data-n=${n}><img src="${SPR(n)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n})">${dots(n)}</button>`).join('');
+  $('#lst').innerHTML=L.map(n=>f.has(n)?`<button class="cell ok" data-n=${n}><img src="${SPR(n,isSh(n))}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},${isSh(n)})">${isSh(n)?'<i class=st>✨</i>':''}</button>`:`<button class="cell ko" data-n=${n}><img src="${SPR(n)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n})"></button>`).join('');
   $('#cpt').hidden=false;$('#cpt').textContent=`${tr('Trouvés','Found')} : ${f.size} / ${L.length}`;
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
