@@ -131,6 +131,8 @@ body.ingame .side{height:auto;position:static;min-height:0}
 body.ingame .det{overflow-y:auto;scrollbar-width:none;min-height:0}
 body.ingame .det::-webkit-scrollbar{display:none}
 .jeu.fin .dex{grid-template-columns:repeat(3,1fr);max-height:none;flex:1;min-height:0;margin:8px 0;padding:6px;gap:6px;background:transparent}
+.cell.ko{border-color:#e74c3c;background:radial-gradient(circle,rgba(231,76,60,.28),var(--st) 75%)}
+.jeu.fin .cell{border-width:3px}.jeu.fin .cell.ok{border-color:#2ecc71;background:var(--st)}.jeu.fin .cell.ko{border-color:#e74c3c;background:var(--st)}
 .jeu.fin .cell{height:auto;aspect-ratio:1;padding:3px}.jeu.fin .cell img{max-height:100%;width:100%;object-fit:contain}
 @media(max-width:760px){body.ingame{overflow:auto}body.ingame #app{height:auto;display:block}body.ingame .top{position:sticky}body.ingame .jeu{grid-template-rows:auto}body.ingame .side{height:420px}}
 /* thème clair */
@@ -406,12 +408,11 @@ async function chercher(){
   else{son('dup');$('#spr').querySelectorAll('img').forEach(x=>anim(x,'shake'))}
 }
 function montrer(ids,statut){
-  const g=S.game,hid=n=>g&&g.fin&&!g.ids.includes(n); // en fin de partie, ce qui n'a pas été trouvé reste caché
   $('#num').textContent=ids.map(n=>'#'+pad(n)).join(' / ');$('#num').dataset.n=ids.length==1?ids[0]:'';
-  $('#nom').textContent=ids.map(n=>hid(n)?'???':pn(n)).join(' / ');
-  $('#spr').replaceChildren(...ids.map(n=>{if(hid(n)){const s=new Image();s.src=SPR(n);s.className='sil';return s}const i=img(n,isSh(n));i.className=ids.length>1?'duo':'';return i}));
-  $('#sta').innerHTML=ids.length==1&&!hid(ids[0])?fiche(P[ids[0]]):'';
-  if(statut){const ok=g.ids.includes(ids[0]);fb(ok?`${pn(ids[0])} ${tr('trouvé !','found!')}`:tr('Pas trouvé !','Not found!'),ok?'#2e9e4f':'#c0392b')}
+  $('#nom').textContent=ids.map(pn).join(' / ');
+  $('#spr').replaceChildren(...ids.map(n=>{const i=img(n,isSh(n));i.className=ids.length>1?'duo':'';return i}));
+  $('#sta').innerHTML=ids.length==1?fiche(P[ids[0]]):'';
+  if(statut){const ok=S.game.ids.includes(ids[0]);fb(ok?`✅ ${pn(ids[0])} ${tr('trouvé !','found!')}`:`❌ ${pn(ids[0])} : ${tr('pas trouvé','not found')}`,ok?'#2e9e4f':'#c0392b')}
   document.querySelectorAll('#lst .sel').forEach(x=>x.classList.remove('sel'));if(ids.length==1){const r=$(`#lst [data-n="${ids[0]}"]`);if(r)r.classList.add('sel')}
 }
 const STEN={hp:'HP',atk:'ATK',def:'DEF',spe_atk:'SP.ATK',spe_def:'SP.DEF',vit:'SPD'};
@@ -425,7 +426,7 @@ function fin(k){
   clearInterval(tm);const g=S.game,f=new Set(g.ids),L=cibleIds(g),T=TIT[k],titre=T?tr(T[0],T[1]):k;
   $('#q').disabled=$('#go').disabled=true;$('#mn').hidden=false;$('#tmr').hidden=$('#arr').hidden=$('#cpt').hidden=true;
   const jeu=$('.jeu');if(jeu)jeu.classList.add('fin');$('#lst').className='dex';
-  $('#lst').innerHTML=L.map(n=>f.has(n)?`<button class="cell ok" data-n=${n}><img src="${SPR(n,isSh(n))}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},${isSh(n)})">${isSh(n)?'<i class=st>✨</i>':''}</button>`:`<button class=cell data-n=${n}><img class=sil src="${SPR(n)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n})"></button>`).join('');
+  $('#lst').innerHTML=L.map(n=>f.has(n)?`<button class="cell ok" data-n=${n}><img src="${SPR(n,isSh(n))}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n},${isSh(n)})">${isSh(n)?'<i class=st>✨</i>':''}</button>`:`<button class="cell ko" data-n=${n}><img src="${SPR(n)}" loading=lazy alt="" onerror="this.onerror=null;this.src=SPR2(${n})"></button>`).join('');
   $('#cpt').hidden=false;$('#cpt').textContent=`${tr('Trouvés','Found')} : ${f.size} / ${L.length}`;
   const t=Math.round((g.vu-g.debut)/1000);
   fb(`${titre}\n${tr('Trouvés','Found')} : ${f.size} / ${L.length}${g.cible?' ('+labelCible(g.cible)+')':''} — ${tr('clique (ou glisse) sur la liste pour voir chaque Pokémon','click (or drag) on the list to view each Pokémon')}${DFI?`\n${f.size>DFI?tr('🎉 Tu as battu','🎉 You beat'):tr('⚔️ Défi de','⚔️ Challenge from')} ${tr('ton ami','your friend')} (${DFI})`:''}`,'#2e9e4f');
