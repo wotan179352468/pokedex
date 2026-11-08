@@ -130,9 +130,9 @@ body.ingame .jeu{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
 body.ingame .side{height:auto;position:static;min-height:0}
 body.ingame .det{overflow-y:auto;scrollbar-width:none;min-height:0}
 body.ingame .det::-webkit-scrollbar{display:none}
-.jeu.fin{grid-template-columns:minmax(0,1fr) 460px}
-.jeu.fin .dex{max-height:none;flex:1;min-height:0;margin:8px 0;background:transparent}
-@media(max-width:760px){body.ingame{overflow:auto}body.ingame #app{height:auto;display:block}body.ingame .top{position:sticky}body.ingame .jeu{grid-template-rows:auto}body.ingame .side{height:420px}.jeu.fin{grid-template-columns:1fr}.jeu.fin .dex{max-height:50vh}}
+.jeu.fin .dex{grid-template-columns:repeat(3,1fr);max-height:none;flex:1;min-height:0;margin:8px 0;padding:6px;gap:6px;background:transparent}
+.jeu.fin .cell{height:auto;aspect-ratio:1;padding:3px}.jeu.fin .cell img{max-height:100%;width:100%;object-fit:contain}
+@media(max-width:760px){body.ingame{overflow:auto}body.ingame #app{height:auto;display:block}body.ingame .top{position:sticky}body.ingame .jeu{grid-template-rows:auto}body.ingame .side{height:420px}}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
 body.light button{color:#2c3e50}
