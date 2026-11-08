@@ -138,6 +138,14 @@ body.ingame .det::-webkit-scrollbar{display:none}
 /* types */
 .tps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:6px 0 2px}.tp{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 14px 0 3px;border-radius:15px;background:var(--tc);border:2px solid rgba(0,0,0,.5);color:#fff;font-weight:800;font-style:italic;text-transform:uppercase;font-size:.8rem;letter-spacing:.03em;text-shadow:0 1px 0 #000a,1px 0 0 #0007,-1px 0 0 #0007;box-shadow:inset 0 3px 0 rgba(255,255,255,.3)}
 .tp .ti{width:21px;height:21px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--tc);box-shadow:0 0 0 1.5px rgba(0,0,0,.4);text-shadow:none}.ti svg{width:14px;height:14px;fill:currentColor}
+/* barres de défilement : fines, arrondies, aux couleurs du site */
+html::-webkit-scrollbar,.lst::-webkit-scrollbar,.dex::-webkit-scrollbar,#mdl .box::-webkit-scrollbar{width:10px;height:10px}
+html::-webkit-scrollbar-track,.lst::-webkit-scrollbar-track,.dex::-webkit-scrollbar-track,#mdl .box::-webkit-scrollbar-track{background:rgba(127,127,127,.14);border-radius:8px}
+.lst::-webkit-scrollbar-track,.dex::-webkit-scrollbar-track{margin:4px 0}
+html::-webkit-scrollbar-thumb,.lst::-webkit-scrollbar-thumb,.dex::-webkit-scrollbar-thumb,#mdl .box::-webkit-scrollbar-thumb{background:linear-gradient(#7aa8d6,#4a76a3);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+html::-webkit-scrollbar-thumb:hover,.lst::-webkit-scrollbar-thumb:hover,.dex::-webkit-scrollbar-thumb:hover,#mdl .box::-webkit-scrollbar-thumb:hover{background:linear-gradient(#a3c8ee,#6a97c4);background-clip:padding-box}
+html::-webkit-scrollbar-button,.lst::-webkit-scrollbar-button,.dex::-webkit-scrollbar-button,#mdl .box::-webkit-scrollbar-button{display:none}
+@supports not selector(::-webkit-scrollbar){.lst,.dex,#mdl .box,html{scrollbar-width:thin;scrollbar-color:#6a97c4 transparent}}
 /* thème clair */
 body.light{--bg:#e9eef5;--dark:#f3f6fa;--st:#ffffff;--card:#dbe3ee;--blue:#1b6fb0;--gold:#b8860b;--green:#3a8a00;--txt:#2c3e50;--lock:#8795a5;--pur:#6c4fb3;background:#e9eef5}
 body.light button{color:#2c3e50}
